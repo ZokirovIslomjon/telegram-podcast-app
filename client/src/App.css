@@ -50,20 +50,27 @@ body {
   padding: 0;
 }
 
+/* --- GRADIENT FILTER BUTTONS --- */
 .filter-btn {
   padding: 8px 16px;
   font-size: 14px;
-  background-color: #333;
+  /* Subtle dark gradient for inactive state */
+  background: linear-gradient(to bottom, #3a3a3a, #2b2b2b);
   color: white;
   border-radius: 20px;
-  border: none;
+  border: 1px solid #444; /* Add a thin border for definition */
   cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
 }
 
 .filter-btn.active {
-  background-color: #1db954; /* Spotify Green */
-  color: black;
+  /* Vibrant green gradient for active state */
+  background: linear-gradient(to bottom, #1db954, #179443);
+  color: white;
   font-weight: bold;
+  border: none; /* Remove border on active to make it pop */
+  box-shadow: 0 4px 10px rgba(29, 185, 84, 0.4); /* Green glow */
 }
 
 /* 3. The Search Bar */
@@ -160,37 +167,53 @@ body {
   color: #eeeeee;
 }
 
-/* Heart Button */
+/* --- HEART BUTTON WITH BACKGROUND --- */
 .heart-btn {
-  background: none;
+  background: rgba(255, 255, 255, 0.05); /* Subtle background */
   border: none;
-  font-size: 24px;
+  font-size: 20px;
   cursor: pointer;
-  padding: 0;
+  padding: 8px;
+  border-radius: 50%; /* Circular */
   line-height: 1;
-  transition: transform 0.2s;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.heart-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
 }
 
 .heart-btn:active {
-  transform: scale(1.3);
+  transform: scale(1.2);
 }
 
-/* Play Button */
+/* --- GRADIENT PLAY BUTTON --- */
 .play-btn {
   width: 100%;
   margin-top: 15px;
-  padding: 10px;
-  background-color: #333;
+  padding: 12px; /* Slightly bigger */
+  /* Attractive green-to-blue gradient */
+  background: linear-gradient(90deg, #1db954, #00d2ff);
   color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: 12px; /* More rounded */
   cursor: pointer;
   font-weight: bold;
-  transition: background 0.2s;
+  font-size: 16px;
+  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 4px 10px rgba(0, 210, 255, 0.3); /* Cool glow */
 }
 
 .play-btn:hover {
-  background-color: #444;
+  transform: scale(1.02); /* Slight grow effect */
+  box-shadow: 0 6px 15px rgba(0, 210, 255, 0.5);
+}
+
+.play-btn:active {
+  transform: scale(0.98);
 }
 
 /* Highlight the active card */
@@ -199,19 +222,27 @@ body {
   background-color: #1a2e1f; 
 }
 
-/* Load More Button */
+/* --- GRADIENT LOAD MORE BUTTON --- */
 .load-more-btn {
   display: block;
   width: 100%;
   padding: 15px;
-  margin-top: 20px;
-  background-color: #1db954; 
-  color: black;
+  margin-top: 25px;
+  /* Same vibrant gradient as the play button */
+  background: linear-gradient(90deg, #1db954, #00d2ff);
+  color: white;
   font-weight: bold;
   font-size: 16px;
   border: none;
-  border-radius: 30px; 
+  border-radius: 30px;
   cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 4px 10px rgba(29, 185, 84, 0.3);
+}
+
+.load-more-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(29, 185, 84, 0.5);
 }
 
 .load-more-btn:active {
@@ -226,26 +257,33 @@ body {
   font-size: 14px;
 }
 
-/* Sticky Player */
+/* --- LIQUID STICKY PLAYER --- */
 .sticky-player {
   position: fixed;
   bottom: 0;
   left: 0;
   width: 100%;
-  background: rgba(20, 20, 20, 0.95); 
-  backdrop-filter: blur(10px); 
+  /* Creates a dark, liquid-like gradient background */
+  background: linear-gradient(135deg, #000000, #1a1a1a, #0d0d26);
+  background-size: 200% 200%; /* Allows the gradient to move */
+  /* Adds a subtle flowing animation */
+  animation: liquidFlow 10s ease infinite, slideUp 0.3s ease-out;
+  
   border-top: 1px solid #333;
   padding: 15px;
   box-sizing: border-box;
-  z-index: 1000; 
-  box-shadow: 0 -5px 20px rgba(0,0,0,0.5);
-  animation: slideUp 0.3s ease-out;
+  z-index: 1000;
+  box-shadow: 0 -5px 20px rgba(0,0,0,0.8); /* Stronger shadow for depth */
+  backdrop-filter: blur(10px); /* Keeps the glass effect */
 }
 
-@keyframes slideUp {
-  from { transform: translateY(100%); }
-  to { transform: translateY(0); }
+/* Animation for the liquid effect */
+@keyframes liquidFlow {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
+/* ... keep @keyframes slideUp, .player-info, .player-title ... */
 
 .player-info {
   display: flex;
@@ -265,11 +303,22 @@ body {
 }
 
 .close-player {
-  background: none;
+  background: rgba(255, 255, 255, 0.1); /* Subtle background */
   border: none;
-  color: #888;
-  font-size: 18px;
+  color: #fff;
+  font-size: 16px;
   cursor: pointer;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%; /* Make it a circle */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.close-player:hover {
+  background: rgba(255, 255, 255, 0.2);
 }
 
 .main-audio-player {
