@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
-import './App.css?v=final_v2' 
+import './App.css?v=swipe_update' 
 
 const CATEGORIES = ["All", "Interview", "Business", "Tech", "Health", "Education"]
 
@@ -20,6 +20,10 @@ function App() {
   // Audio Player State
   const [currentEpisode, setCurrentEpisode] = useState(null)
   const [isPlayerExpanded, setIsPlayerExpanded] = useState(false)
+
+  // --- SWIPE LOGIC STATE ---
+  const [touchStart, setTouchStart] = useState(null)
+  const [touchEnd, setTouchEnd] = useState(null)
 
   useEffect(() => {
     const savedFavorites = localStorage.getItem('myFavorites')
@@ -68,10 +72,30 @@ function App() {
   const visibleEpisodes = filteredEpisodes.slice(0, visibleCount)
   const loadMore = () => setVisibleCount(prevCount => prevCount + 20)
 
+  // --- 1. STOP AUTO EXPAND HERE ---
   const handlePlay = (episode) => {
     setCurrentEpisode(episode)
-    // Optional: Auto-expand on play. Set to false if you prefer it stays small.
-    setIsPlayerExpanded(true) 
+    setIsPlayerExpanded(false) // <--- Keep it minimized when starting!
+  }
+
+  // --- 2. SWIPE HANDLERS ---
+  const onTouchStart = (e) => {
+    setTouchEnd(null)
+    setTouchStart(e.targetTouches[0].clientY)
+  }
+
+  const onTouchMove = (e) => {
+    setTouchEnd(e.targetTouches[0].clientY)
+  }
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return
+    const distance = touchStart - touchEnd
+    const isUpSwipe = distance > 50   // Swipe Up threshold
+    const isDownSwipe = distance < -50 // Swipe Down threshold
+
+    if (isUpSwipe) setIsPlayerExpanded(true)
+    if (isDownSwipe) setIsPlayerExpanded(false)
   }
 
   return (
@@ -129,19 +153,24 @@ function App() {
         )}
       </div>
 
-      {/* --- EXPANDABLE PLAYER SECTION --- */}
+      {/* --- EXPANDABLE PLAYER WITH SWIPE --- */}
       {currentEpisode && (
         <div 
           className={`sticky-player ${isPlayerExpanded ? 'expanded' : ''}`} 
           onClick={() => !isPlayerExpanded && setIsPlayerExpanded(true)}
+          // Attach Swipe Listeners here
+          onTouchStart={onTouchStart}
+          onTouchMove={onTouchMove}
+          onTouchEnd={onTouchEnd}
         >
           
+          {/* --- THE SWIPE HANDLE BAR --- */}
+          <div className="swipe-handle"></div>
+
           {/* MINIMIZED VIEW */}
           {!isPlayerExpanded && (
-            <div className="player-minimized" style={{ cursor: 'pointer' }}>
+            <div className="player-minimized">
               <div className="player-info">
-                 {/* Up Arrow to show clickable */}
-                <span style={{ marginRight: '10px', fontSize: '18px', color: '#1db954' }}>⤊</span> 
                 <span className="player-title">{currentEpisode.title}</span>
                 <button className="close-player" onClick={(e) => { e.stopPropagation(); setCurrentEpisode(null); }}>✖</button>
               </div>
