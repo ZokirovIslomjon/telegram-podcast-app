@@ -47,7 +47,6 @@ function App() {
         if (data.episodes && Array.isArray(data.episodes)) {
           setEpisodes(data.episodes)
           setPodcastData({
-            title: "Stanton Academy",
             image: "/logo.png"
           })
         } else {

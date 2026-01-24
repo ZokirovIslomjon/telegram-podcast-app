@@ -29,22 +29,21 @@ body {
 }
 
 .podcast-logo {
-  width: 100%;             /* Let it fill the width of its container */
-  max-width: 200px;        /* But stop it from getting too huge */
-  height: auto;            /* Adjust height automatically to match the image */
-  max-height: 100px;       /* Limit the height */
+  width: 100%;
+  max-width: 150px; /* Was 200px */
+  height: auto;
+  max-height: 80px; /* Was 100px */
   display: block;
-  margin: 0 auto 15px auto; /* Center it */
-  
-  /* THIS IS THE KEY FIX: */
-  object-fit: contain;     /* Show the WHOLE image, do not crop/zoom */
+  margin: 0 auto 5px auto; /* Tighter margin */
+  object-fit: contain;
 }
 
+/* Shrink the Title */
 h1 {
-  font-size: 28px;
+  font-size: 20px; /* Was 28px */
   font-weight: 700;
-  margin: 0;
-  background: linear-gradient(90deg, #fff, #bbb); /* Subtle gradient text */
+  margin: 5px 0 15px 0; /* Less margin */
+  background: linear-gradient(90deg, #fff, #bbb);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -151,11 +150,13 @@ audio {
 /* Filter Buttons (Tabs) */
 .filter-buttons {
   display: flex;
-  gap: 10px;
-  margin-top: 15px;
-  background: #2a2a2a;
-  padding: 5px;
-  border-radius: 25px;
+  gap: 8px; /* Smaller gap */
+  margin-top: 10px;
+  background: #222; /* Darker background */
+  padding: 4px; /* Less padding */
+  border-radius: 20px;
+  width: 100%;
+  max-width: 300px; /* Stop them from getting too wide */
 }
 
 .filter-btn {
@@ -163,17 +164,18 @@ audio {
   background: none;
   border: none;
   color: #888;
-  padding: 10px;
-  border-radius: 20px;
-  font-weight: bold;
+  padding: 8px 12px; /* Smaller buttons */
+  border-radius: 16px;
+  font-size: 13px; /* Smaller text */
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .filter-btn.active {
-  background: #1db954; /* Green */
+  background: #1db954;
   color: black;
-  box-shadow: 0 4px 10px rgba(29, 185, 84, 0.3);
+  box-shadow: 0 2px 8px rgba(29, 185, 84, 0.3);
 }
 
 /* Card Layout Update */
