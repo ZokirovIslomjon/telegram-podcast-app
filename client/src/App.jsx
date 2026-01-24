@@ -46,7 +46,7 @@ function App() {
           // --- CUSTOM LOGO SECTION STARTS HERE ---
           // FIND THIS SECTION:
 setPodcastData({
-  title: "My Podcast",  // <--- This is where the name is coming from!
+  //title: "My Podcast",  // <--- This is where the name is coming from!
   image: "/logo.png"
 })
           // ---------------------------------------
