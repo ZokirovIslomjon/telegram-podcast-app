@@ -94,29 +94,27 @@ function App() {
   return (
     <div className="app-container">
       {/* --- NEW COMPACT HEADER STRUCTURE --- */}
+      {/* --- SIMPLIFIED NAVBAR --- */}
       <div className="header-row">
+        {/* 1. Logo on the Left */}
         {podcastData.image && (
           <img src={podcastData.image} alt="Logo" className="podcast-logo" />
         )}
         
-        <div className="header-info">
-          <h1>{podcastData.title}</h1>
-          
-          {/* Mini Toggle Buttons */}
-          <div className="filter-buttons">
-             <button 
-               className={`filter-btn ${!showFavoritesOnly ? 'active' : ''}`}
-               onClick={() => setShowFavoritesOnly(false)}
-             >
-               Home 🏠
-             </button>
-             <button 
-               className={`filter-btn ${showFavoritesOnly ? 'active' : ''}`}
-               onClick={() => setShowFavoritesOnly(true)}
-             >
-               Favs ❤️
-             </button>
-          </div>
+        {/* 2. Buttons on the Right (No Title Wrapper needed) */}
+        <div className="filter-buttons">
+           <button 
+             className={`filter-btn ${!showFavoritesOnly ? 'active' : ''}`}
+             onClick={() => setShowFavoritesOnly(false)}
+           >
+             Home 🏠
+           </button>
+           <button 
+             className={`filter-btn ${showFavoritesOnly ? 'active' : ''}`}
+             onClick={() => setShowFavoritesOnly(true)}
+           >
+             Favs ❤️
+           </button>
         </div>
       </div>
 

@@ -20,25 +20,24 @@ body {
 }
 
 /* 2. Header & Logo Styling */
-/* --- NEW CLASS NAME: header-row --- */
+/* --- PRO NAVBAR LAYOUT --- */
 .header-row {
   display: flex;
-  align-items: center;     /* Vertically center */
-  gap: 15px;               /* Space between logo and text */
+  align-items: center;      /* Center vertically */
+  justify-content: space-between; /* Push items to edges (Left & Right) */
+  padding: 10px 0;          /* Add breathing room */
   margin-bottom: 20px;
-  padding-bottom: 15px;
   border-bottom: 1px solid #333;
 }
 
-/* Ensure the logo stays small */
+/* Logo Fix */
 .podcast-logo {
-  width: 80px !important;
-  height: 80px !important;
-  border-radius: 12px;
+  width: 120px !important;  /* Good size for "Poddex" text logo */
+  height: auto;
+  max-height: 50px;         /* Keep it slim */
   object-fit: contain;
   margin: 0;
-  flex-shrink: 0;
-  background: #000;
+  /* Removed background-color: #000; so it blends better */
 }
 
 .header-info {
@@ -46,16 +45,6 @@ body {
   flex-direction: column;
   justify-content: center;
   width: 100%;
-}
-
-/* Shrink the Title */
-h1 {
-  font-size: 20px; /* Was 28px */
-  font-weight: 700;
-  margin: 5px 0 15px 0; /* Less margin */
-  background: linear-gradient(90deg, #fff, #bbb);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
 }
 
 /* 3. The Search Bar */
@@ -158,34 +147,26 @@ audio {
 }
 
 /* Filter Buttons (Tabs) */
+/* Buttons Fix */
 .filter-buttons {
   display: flex;
-  gap: 8px; /* Smaller gap */
-  margin-top: 10px;
-  background: #222; /* Darker background */
-  padding: 4px; /* Less padding */
-  border-radius: 20px;
-  width: 100%;
-  max-width: 300px; /* Stop them from getting too wide */
+  gap: 10px;
+  background: none;         /* Remove grey background */
+  padding: 0;
 }
 
 .filter-btn {
-  flex: 1;
-  background: none;
+  padding: 8px 16px;
+  font-size: 14px;
+  background-color: #333;
+  color: white;
+  border-radius: 20px;
   border: none;
-  color: #888;
-  padding: 8px 12px; /* Smaller buttons */
-  border-radius: 16px;
-  font-size: 13px; /* Smaller text */
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
 }
-
 .filter-btn.active {
-  background: #1db954;
+  background-color: #1db954;
   color: black;
-  box-shadow: 0 2px 8px rgba(29, 185, 84, 0.3);
+  font-weight: bold;
 }
 
 /* Card Layout Update */
