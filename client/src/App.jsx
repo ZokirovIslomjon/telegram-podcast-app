@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
-import './App.css?v=3' // <--- Updated to v3 to force cache refresh
+import './App.css?v=final_fix' 
 
-// --- CUSTOMIZE CATEGORIES ---
 const CATEGORIES = ["All", "Interview", "Business", "Tech", "Health", "Education"]
 
 function App() {
@@ -12,8 +11,6 @@ function App() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
   const [visibleCount, setVisibleCount] = useState(20)
-  
-  // Filters & State
   const [favorites, setFavorites] = useState([])
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState("All")
@@ -21,9 +18,7 @@ function App() {
 
   useEffect(() => {
     const savedFavorites = localStorage.getItem('myFavorites')
-    if (savedFavorites) {
-      setFavorites(JSON.parse(savedFavorites))
-    }
+    if (savedFavorites) setFavorites(JSON.parse(savedFavorites))
   }, [])
 
   useEffect(() => {
@@ -36,10 +31,7 @@ function App() {
         const data = response.data
         if (data.episodes && Array.isArray(data.episodes)) {
           setEpisodes(data.episodes)
-          setPodcastData({
-            title: "Stanton Academy",
-            image: "/logo.png"
-          })
+          setPodcastData({ title: "Stanton Academy", image: "/logo.png" })
         } else {
           setError("Episodes list missing.")
         }
@@ -64,35 +56,28 @@ function App() {
     const matchesCategory = selectedCategory === "All" || 
       (episode.title && episode.title.toLowerCase().includes(selectedCategory.toLowerCase()))
 
-    if (showFavoritesOnly) {
-      return matchesSearch && favorites.includes(episode.title)
-    }
+    if (showFavoritesOnly) return matchesSearch && favorites.includes(episode.title)
     return matchesSearch && matchesCategory
   })
   
   const visibleEpisodes = filteredEpisodes.slice(0, visibleCount)
-
-  const loadMore = () => {
-    setVisibleCount(prevCount => prevCount + 20)
-  }
+  const loadMore = () => setVisibleCount(prevCount => prevCount + 20)
 
   return (
     <div className="app-container">
       
-      {/* --- HEADER SECTION --- */}
+      {/* --- HEADER ROW (Contains ONLY Logo and Buttons) --- */}
       <div className="header-row">
-        {/* Logo Left */}
         {podcastData.image && (
           <img src={podcastData.image} alt="Logo" className="podcast-logo" />
         )}
         
-        {/* Buttons Right */}
         <div className="filter-buttons">
            <button 
              className={`filter-btn ${!showFavoritesOnly ? 'active' : ''}`}
              onClick={() => setShowFavoritesOnly(false)}
            >
-             Start 🏠
+             Home 🏠
            </button>
            <button 
              className={`filter-btn ${showFavoritesOnly ? 'active' : ''}`}
@@ -101,9 +86,11 @@ function App() {
              Favs ❤️
            </button>
         </div>
-      </div> 
-      {/* 🛑 HEADER CLOSES HERE - LIST IS NOW SAFE BELOW */}
+      </div>
+      {/* --- END OF HEADER ROW --- */}
 
+      {/* --- MAIN CONTENT STARTS HERE (Must be OUTSIDE header-row) --- */}
+      
       {!showFavoritesOnly && (
         <>
           <input 
@@ -134,7 +121,6 @@ function App() {
         <p className="status-message">You haven't liked any episodes yet. 💔</p>
       )}
 
-      {/* --- EPISODE LIST --- */}
       <div className="episode-list">
         {visibleEpisodes.map((episode, index) => {
           const isFav = favorites.includes(episode.title)
@@ -163,7 +149,6 @@ function App() {
         )}
       </div>
 
-      {/* --- PLAYER --- */}
       {currentEpisode && (
         <div className="sticky-player">
           <div className="player-info">
