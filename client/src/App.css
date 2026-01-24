@@ -181,7 +181,9 @@ body {
   height: 100px;
   padding-top: 10px;
   
-  /* Liquid Gradient */
+  /* --- THE MAGIC FIX --- */
+  touch-action: none; /* Tells browser: "Don't scroll! Let me handle the swipe." */
+  
   background: linear-gradient(135deg, #000000, #1a1a1a, #0d0d26);
   background-size: 200% 200%;
   animation: liquidFlow 10s ease infinite;
@@ -191,14 +193,14 @@ body {
   box-sizing: border-box;
   z-index: 2000; 
   box-shadow: 0 -5px 25px rgba(0,0,0,0.9);
-  transition: height 0.4s ease;
+  transition: height 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); /* Smoother bounce */
   overflow: hidden;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
 }
 
-/* EXPANDED STATE (Full Screen) */
+/* EXPANDED STATE */
 .sticky-player.expanded {
   top: 0;
   height: 100vh;
@@ -207,6 +209,10 @@ body {
   padding: 40px 20px;
   justify-content: space-between;
   background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+  
+  /* Re-enable scrolling when full screen! */
+  touch-action: pan-y; 
+  overflow-y: auto; 
 }
 
 .swipe-handle {

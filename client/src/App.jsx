@@ -90,9 +90,12 @@ function App() {
 
   const onTouchEnd = () => {
     if (!touchStart || !touchEnd) return
+    
     const distance = touchStart - touchEnd
-    const isUpSwipe = distance > 50   // Swipe Up threshold
-    const isDownSwipe = distance < -50 // Swipe Down threshold
+    
+    // Lowered threshold to 30px for easier swiping
+    const isUpSwipe = distance > 30   
+    const isDownSwipe = distance < -30 
 
     if (isUpSwipe) setIsPlayerExpanded(true)
     if (isDownSwipe) setIsPlayerExpanded(false)
