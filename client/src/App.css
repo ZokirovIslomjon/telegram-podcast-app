@@ -201,8 +201,16 @@ body {
   width: 100%;
   margin-top: 15px;
   padding: 12px;
-  /* Cool Blue-Green Gradient */
-  background: linear-gradient(90deg, #1db954, #00d2ff);
+  
+  /* 1. The Liquid Gradient (Green -> Blue -> Green loop) */
+  background: linear-gradient(90deg, #1db954, #00d2ff, #1db954);
+  
+  /* 2. Make background bigger so it can move */
+  background-size: 200% 100%;
+  
+  /* 3. The Animation (reuse the liquidFlow we made earlier) */
+  animation: liquidFlow 3s linear infinite;
+  
   color: white;
   border: none;
   border-radius: 12px;
@@ -215,7 +223,7 @@ body {
 
 .play-btn:hover {
   transform: scale(1.02);
-  box-shadow: 0 6px 15px rgba(0, 210, 255, 0.4);
+  box-shadow: 0 6px 20px rgba(0, 210, 255, 0.5); /* Stronger glow on hover */
 }
 
 .playing-card {
@@ -223,13 +231,18 @@ body {
   background: linear-gradient(135deg, rgba(29, 185, 84, 0.1), rgba(0, 0, 0, 0));
 }
 
-/* --- GRADIENT LOAD MORE BUTTON --- */
+/* --- LIQUID LOAD MORE BUTTON --- */
 .load-more-btn {
   display: block;
   width: 100%;
   padding: 15px;
   margin-top: 25px;
-  background: linear-gradient(90deg, #1db954, #00d2ff);
+  
+  /* Same Liquid Effect */
+  background: linear-gradient(90deg, #1db954, #00d2ff, #1db954);
+  background-size: 200% 100%;
+  animation: liquidFlow 3s linear infinite;
+  
   color: white;
   font-weight: bold;
   font-size: 16px;
