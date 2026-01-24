@@ -93,24 +93,30 @@ function App() {
 
   return (
     <div className="app-container">
+      {/* --- NEW COMPACT HEADER STRUCTURE --- */}
       <div className="podcast-header">
-        {podcastData.image && <img src={podcastData.image} alt="Logo" className="podcast-logo" />}
-        <h1>{podcastData.title}</h1>
-
-        {/* Favorites Toggle */}
-        <div className="filter-buttons">
-           <button 
-             className={`filter-btn ${!showFavoritesOnly ? 'active' : ''}`}
-             onClick={() => setShowFavoritesOnly(false)}
-           >
-             Home 🏠
-           </button>
-           <button 
-             className={`filter-btn ${showFavoritesOnly ? 'active' : ''}`}
-             onClick={() => setShowFavoritesOnly(true)}
-           >
-             Favorites ❤️ ({favorites.length})
-           </button>
+        {podcastData.image && (
+          <img src={podcastData.image} alt="Logo" className="podcast-logo" />
+        )}
+        
+        <div className="header-info">
+          <h1>{podcastData.title}</h1>
+          
+          {/* Mini Toggle Buttons */}
+          <div className="filter-buttons">
+             <button 
+               className={`filter-btn ${!showFavoritesOnly ? 'active' : ''}`}
+               onClick={() => setShowFavoritesOnly(false)}
+             >
+               Home 🏠
+             </button>
+             <button 
+               className={`filter-btn ${showFavoritesOnly ? 'active' : ''}`}
+               onClick={() => setShowFavoritesOnly(true)}
+             >
+               Favs ❤️
+             </button>
+          </div>
         </div>
       </div>
 
