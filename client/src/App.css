@@ -35,6 +35,10 @@ body {
   box-shadow: 0 10px 30px rgba(0,0,0,0.5); /* Deep shadow for depth */
   margin-bottom: 20px;
   border: 1px solid #333;
+
+  /* --- THE FIX --- */
+  object-fit: cover; /* This prevents stretching! */
+  background-color: #000; /* Fills empty space with black if needed */
 }
 
 h1 {
