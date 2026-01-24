@@ -26,6 +26,9 @@ body {
   padding: 10px 0;
   margin-bottom: 20px;
   border-bottom: 1px solid #333;
+
+  /* --- THE FIX --- */
+  flex-wrap: wrap; /* This allows items to break onto a new line if needed */
 }
 
 .podcast-logo {
@@ -112,6 +115,10 @@ body {
   flex-direction: column;
   gap: 15px;
   padding-bottom: 120px;
+
+  /* --- THE FIX --- */
+  width: 100%;      /* Force it to take full width */
+  margin-top: 20px; /* Push it away from the header */
 }
 
 .episode-card {
