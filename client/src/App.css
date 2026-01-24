@@ -7,9 +7,12 @@
 body {
   margin: 0;
   padding: 0;
-  background-color: #121212; /* Deep Dark Background */
-  color: #ffffff;
   min-height: 100vh;
+  color: #ffffff;
+  
+  /* --- NEW GRADIENT BACKGROUND --- */
+  background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+  background-attachment: fixed; /* Keeps gradient locked while you scroll */
 }
 
 .app-container {
