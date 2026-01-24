@@ -29,12 +29,16 @@ body {
 }
 
 .podcast-logo {
-  width: 140px;
-  height: 140px;
-  border-radius: 20px; /* Smooth rounded corners */
-  box-shadow: 0 10px 30px rgba(0,0,0,0.5); /* Deep shadow for depth */
-  margin-bottom: 20px;
+  .podcast-logo {
+  width: 100px;          /* Was 140px */
+  height: 100px;         /* Was 140px */
+  border-radius: 18px;   /* Slightly tighter corners */
+  box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+  margin-bottom: 15px;
   border: 1px solid #333;
+  object-fit: cover;
+ 
+}
 
   /* --- THE FIX --- */
   object-fit: cover; /* This prevents stretching! */
