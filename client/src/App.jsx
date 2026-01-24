@@ -94,7 +94,7 @@ function App() {
   return (
     <div className="app-container">
       {/* --- NEW COMPACT HEADER STRUCTURE --- */}
-      <div className="podcast-header">
+      <div className="header-row">
         {podcastData.image && (
           <img src={podcastData.image} alt="Logo" className="podcast-logo" />
         )}

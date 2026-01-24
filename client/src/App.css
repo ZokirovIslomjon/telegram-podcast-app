@@ -20,22 +20,32 @@ body {
 }
 
 /* 2. Header & Logo Styling */
-.podcast-header {
+/* --- NEW CLASS NAME: header-row --- */
+.header-row {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-bottom: 30px;
-  text-align: center;
+  align-items: center;     /* Vertically center */
+  gap: 15px;               /* Space between logo and text */
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #333;
 }
 
+/* Ensure the logo stays small */
 .podcast-logo {
-  width: 100%;
-  max-width: 150px; /* Was 200px */
-  height: auto;
-  max-height: 80px; /* Was 100px */
-  display: block;
-  margin: 0 auto 5px auto; /* Tighter margin */
+  width: 80px !important;
+  height: 80px !important;
+  border-radius: 12px;
   object-fit: contain;
+  margin: 0;
+  flex-shrink: 0;
+  background: #000;
+}
+
+.header-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: 100%;
 }
 
 /* Shrink the Title */
