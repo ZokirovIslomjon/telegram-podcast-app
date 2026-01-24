@@ -42,10 +42,14 @@ function App() {
         const data = response.data
         if (data.episodes && Array.isArray(data.episodes)) {
           setEpisodes(data.episodes)
+          
+          // --- CUSTOM LOGO SECTION STARTS HERE ---
           setPodcastData({
-            title: data.podcastTitle || "My Podcast",
-            image: data.podcastImage || ""
+            title: "Stanton Academy",  // My Custom Brand Name
+            image: "/logo.png"         // My Custom Logo File
           })
+          // ---------------------------------------
+
         } else {
           setError("Episodes list missing.")
         }
