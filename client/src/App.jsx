@@ -2,13 +2,11 @@ import { useState, useEffect } from 'react'
 import axios from 'axios'
 import './App.css'
 
-// --- SAFETY COMPONENT: Catch Crashes ---
-// If a crash happens, this will show the error in RED instead of a white screen.
+// Safety Component
 const ErrorFallback = ({ error }) => (
   <div style={{ padding: 20, border: '2px solid red', margin: 20, borderRadius: 10, background: '#fff0f0' }}>
     <h3 style={{ color: 'red' }}>⚠️ App Crashed</h3>
     <p>{error}</p>
-    <p>Please take a screenshot of this.</p>
   </div>
 );
 
@@ -18,7 +16,9 @@ function App() {
   const [searchTerm, setSearchTerm] = useState("")
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [renderError, setRenderError] = useState(null) // State for render crashes
+  
+  // NEW: State to track how many episodes to show
+  const [visibleCount, setVisibleCount] = useState(20)
 
   useEffect(() => {
     axios.get('https://telegram-podcast-app.onrender.com/api/episodes')
@@ -41,14 +41,17 @@ function App() {
       })
   }, [])
 
-  // --- OPTIMIZATION: ONLY SHOW TOP 20 ---
-  // This prevents the phone from choking on 100+ audio players
-  const filteredEpisodes = episodes
-    .filter(episode => episode.title && episode.title.toLowerCase().includes(searchTerm.toLowerCase()))
-    .slice(0, 20); // <--- THIS IS THE MAGIC FIX
+  // Logic: Filter first, THEN slice based on the visible count
+  const filteredEpisodes = episodes.filter(episode => 
+    episode.title && episode.title.toLowerCase().includes(searchTerm.toLowerCase())
+  )
+  
+  const visibleEpisodes = filteredEpisodes.slice(0, visibleCount)
 
-  // If a crash happened during render, show the Fallback
-  if (renderError) return <ErrorFallback error={renderError} />;
+  // NEW: Function to load more
+  const loadMore = () => {
+    setVisibleCount(prevCount => prevCount + 20)
+  }
 
   return (
     <div className="app-container">
@@ -69,32 +72,36 @@ function App() {
       {error && <p className="error-message">❌ {error}</p>}
 
       <div className="episode-list">
-        {filteredEpisodes.map((episode, index) => {
-          // Wrap in try-catch to prevent one bad episode from killing the app
+        {visibleEpisodes.map((episode, index) => {
           try {
              return (
               <div key={index} className="episode-card">
                 <h3>{episode.title}</h3>
                 {episode.audio ? (
-                  <audio controls preload="none" style={{width: '100%', marginTop: '10px'}}>
+                  <audio controls preload="none">
                     <source src={episode.audio} type="audio/mpeg" />
                   </audio>
                 ) : (
-                  <span style={{fontSize:'12px', color:'#999'}}>Audio unavailable</span>
+                  <span style={{fontSize:'12px', color:'#666'}}>Audio unavailable</span>
                 )}
               </div>
             )
           } catch (e) {
-            console.warn("Skipped bad episode", e)
             return null
           }
         })}
         
-        {/* Show a message if there are more episodes */}
-        {episodes.length > 20 && !searchTerm && (
-          <p style={{marginTop: 20, color: '#888', fontSize: '12px'}}>
-            Showing latest 20 episodes...
-          </p>
+        {/* NEW: The Load More Button */}
+        {/* Only show if there are more episodes to load */}
+        {visibleCount < filteredEpisodes.length && (
+          <button className="load-more-btn" onClick={loadMore}>
+            Load More Episodes 👇
+          </button>
+        )}
+        
+        {/* Show message if we reached the end */}
+        {visibleCount >= filteredEpisodes.length && filteredEpisodes.length > 0 && (
+          <p className="status-message">You have reached the end! 🏁</p>
         )}
       </div>
     </div>
