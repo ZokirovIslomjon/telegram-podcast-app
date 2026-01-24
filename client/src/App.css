@@ -1,4 +1,6 @@
-/* 1. Global Reset & Dark Mode Background */
+/* =========================================
+   1. GLOBAL RESET & APP BACKGROUND
+   ========================================= */
 :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   color-scheme: dark;
@@ -10,9 +12,9 @@ body {
   min-height: 100vh;
   color: #ffffff;
   
-  /* --- NEW GRADIENT BACKGROUND --- */
+  /* Deep Midnight Purple Gradient Background */
   background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-  background-attachment: fixed; /* Keeps gradient locked while you scroll */
+  background-attachment: fixed; /* Keeps gradient locked during scroll */
 }
 
 .app-container {
@@ -20,17 +22,19 @@ body {
   margin: 0 auto;
   padding: 20px;
   box-sizing: border-box;
-  position: relative; /* Helps contain the layout */
+  position: relative;
 }
 
-/* 2. Header & Logo Styling */
+/* =========================================
+   2. HEADER & NAVIGATION
+   ========================================= */
 .header-row {
   display: flex;
   align-items: center;      
   justify-content: space-between; /* Logo Left, Buttons Right */
   padding: 10px 0;          
   margin-bottom: 20px;
-  border-bottom: 1px solid #333;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1); /* Subtle divider */
   flex-wrap: wrap; /* Safety: allows wrapping on tiny screens */
 }
 
@@ -42,7 +46,7 @@ body {
   margin: 0;
 }
 
-/* Filter Buttons (Home / Favs) */
+/* --- GRADIENT FILTER BUTTONS (Home/Favs) --- */
 .filter-buttons {
   display: flex;
   gap: 10px;
@@ -50,49 +54,51 @@ body {
   padding: 0;
 }
 
-/* --- GRADIENT FILTER BUTTONS --- */
 .filter-btn {
   padding: 8px 16px;
   font-size: 14px;
-  /* Subtle dark gradient for inactive state */
+  /* Dark Gradient for inactive */
   background: linear-gradient(to bottom, #3a3a3a, #2b2b2b);
-  color: white;
+  color: #ccc;
   border-radius: 20px;
-  border: 1px solid #444; /* Add a thin border for definition */
+  border: 1px solid #444; 
   cursor: pointer;
   transition: all 0.3s ease;
   box-shadow: 0 2px 5px rgba(0,0,0,0.2);
 }
 
 .filter-btn.active {
-  /* Vibrant green gradient for active state */
+  /* Vibrant Green Gradient for active */
   background: linear-gradient(to bottom, #1db954, #179443);
   color: white;
   font-weight: bold;
-  border: none; /* Remove border on active to make it pop */
+  border: 1px solid #1db954; 
   box-shadow: 0 4px 10px rgba(29, 185, 84, 0.4); /* Green glow */
 }
 
-/* 3. The Search Bar */
+/* =========================================
+   3. SEARCH BAR & DROPDOWN
+   ========================================= */
 .search-bar {
   width: 100%;
   padding: 16px;
   border-radius: 12px;
   border: none;
-  background-color: #2a2a2a; 
+  background-color: rgba(255, 255, 255, 0.1); /* Glass effect */
   color: white;
   font-size: 16px;
-  margin-bottom: 15px; /* Reduced margin to fit dropdown closer */
+  margin-bottom: 15px;
   box-sizing: border-box;
   outline: none;
+  backdrop-filter: blur(5px);
 }
 
 .search-bar:focus {
-  background-color: #333;
+  background-color: rgba(255, 255, 255, 0.15);
   box-shadow: 0 0 0 2px #1db954; 
 }
 
-/* 4. NEW CATEGORY DROPDOWN MENU */
+/* Category Dropdown */
 .dropdown-container {
   margin-bottom: 30px;
 }
@@ -100,7 +106,7 @@ body {
 .dropdown-container label {
   display: block;
   font-size: 12px;
-  color: #888;
+  color: #aaa;
   margin-bottom: 8px;
   margin-left: 5px;
 }
@@ -109,12 +115,12 @@ body {
   width: 100%;             
   padding: 14px;
   font-size: 16px;
-  background-color: #222;  
+  background-color: rgba(30, 30, 30, 0.8);  
   color: white;
-  border: 1px solid #333;
+  border: 1px solid #444;
   border-radius: 12px;
   outline: none;
-  appearance: none;        /* Removes default ugly arrow */
+  appearance: none; /* Removes default ugly arrow */
   
   /* Custom white arrow icon */
   background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23FFFFFF%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
@@ -127,25 +133,28 @@ body {
   border-color: #1db954;
 }
 
-/* 5. Episode Cards (The Layout Fix) */
+/* =========================================
+   4. EPISODE LIST & CARDS
+   ========================================= */
 .episode-list {
   display: flex;
   flex-direction: column;
   gap: 15px;
-  padding-bottom: 120px;
-
-  /* --- THE FORCE FIX --- */
-  width: 100%;        /* Take full width */
-  margin-top: 20px;   /* Clean spacing */
-  clear: both;        /* Ensure it sits below everything else */
+  padding-bottom: 120px; /* Space for sticky player */
+  
+  /* --- LAYOUT SAFETY --- */
+  width: 100%;        
+  margin-top: 20px;   
+  clear: both;        
 }
 
 .episode-card {
-  background-color: #181818; 
+  background-color: rgba(24, 24, 24, 0.8); /* Semi-transparent */
   padding: 20px;
   border-radius: 16px;
-  border: 1px solid #282828;
+  border: 1px solid rgba(255, 255, 255, 0.05);
   transition: transform 0.2s;
+  backdrop-filter: blur(5px);
 }
 
 .episode-card:active {
@@ -167,19 +176,16 @@ body {
   color: #eeeeee;
 }
 
-/* --- HEART BUTTON WITH BACKGROUND --- */
+/* Heart Button */
 .heart-btn {
-  background: rgba(255, 255, 255, 0.05); /* Subtle background */
+  background: rgba(255, 255, 255, 0.05);
   border: none;
   font-size: 20px;
   cursor: pointer;
   padding: 8px;
-  border-radius: 50%; /* Circular */
+  border-radius: 50%;
   line-height: 1;
   transition: all 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .heart-btn:hover {
@@ -194,32 +200,27 @@ body {
 .play-btn {
   width: 100%;
   margin-top: 15px;
-  padding: 12px; /* Slightly bigger */
-  /* Attractive green-to-blue gradient */
+  padding: 12px;
+  /* Cool Blue-Green Gradient */
   background: linear-gradient(90deg, #1db954, #00d2ff);
   color: white;
   border: none;
-  border-radius: 12px; /* More rounded */
+  border-radius: 12px;
   cursor: pointer;
   font-weight: bold;
-  font-size: 16px;
+  font-size: 15px;
   transition: transform 0.2s, box-shadow 0.2s;
-  box-shadow: 0 4px 10px rgba(0, 210, 255, 0.3); /* Cool glow */
+  box-shadow: 0 4px 10px rgba(0, 210, 255, 0.2);
 }
 
 .play-btn:hover {
-  transform: scale(1.02); /* Slight grow effect */
-  box-shadow: 0 6px 15px rgba(0, 210, 255, 0.5);
+  transform: scale(1.02);
+  box-shadow: 0 6px 15px rgba(0, 210, 255, 0.4);
 }
 
-.play-btn:active {
-  transform: scale(0.98);
-}
-
-/* Highlight the active card */
 .playing-card {
   border: 1px solid #1db954;
-  background-color: #1a2e1f; 
+  background: linear-gradient(135deg, rgba(29, 185, 84, 0.1), rgba(0, 0, 0, 0));
 }
 
 /* --- GRADIENT LOAD MORE BUTTON --- */
@@ -228,62 +229,52 @@ body {
   width: 100%;
   padding: 15px;
   margin-top: 25px;
-  /* Same vibrant gradient as the play button */
   background: linear-gradient(90deg, #1db954, #00d2ff);
   color: white;
   font-weight: bold;
   font-size: 16px;
   border: none;
-  border-radius: 30px;
+  border-radius: 30px; 
   cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
   box-shadow: 0 4px 10px rgba(29, 185, 84, 0.3);
-}
-
-.load-more-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 15px rgba(29, 185, 84, 0.5);
 }
 
 .load-more-btn:active {
   transform: scale(0.95);
 }
 
-/* 6. Messages & Player */
-.status-message {
-  text-align: center;
-  color: #888;
-  margin-top: 40px;
-  font-size: 14px;
-}
-
-/* --- LIQUID STICKY PLAYER --- */
+/* =========================================
+   5. LIQUID STICKY PLAYER
+   ========================================= */
 .sticky-player {
   position: fixed;
   bottom: 0;
   left: 0;
   width: 100%;
-  /* Creates a dark, liquid-like gradient background */
+  
+  /* LIQUID EFFECT BACKGROUND */
   background: linear-gradient(135deg, #000000, #1a1a1a, #0d0d26);
-  background-size: 200% 200%; /* Allows the gradient to move */
-  /* Adds a subtle flowing animation */
+  background-size: 200% 200%;
   animation: liquidFlow 10s ease infinite, slideUp 0.3s ease-out;
   
-  border-top: 1px solid #333;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
   padding: 15px;
   box-sizing: border-box;
-  z-index: 1000;
-  box-shadow: 0 -5px 20px rgba(0,0,0,0.8); /* Stronger shadow for depth */
-  backdrop-filter: blur(10px); /* Keeps the glass effect */
+  z-index: 1000; 
+  box-shadow: 0 -5px 25px rgba(0,0,0,0.9);
+  backdrop-filter: blur(10px);
 }
 
-/* Animation for the liquid effect */
 @keyframes liquidFlow {
   0% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
   100% { background-position: 0% 50%; }
 }
-/* ... keep @keyframes slideUp, .player-info, .player-title ... */
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
 
 .player-info {
   display: flex;
@@ -300,29 +291,34 @@ body {
   font-weight: bold;
   color: #1db954;
   max-width: 85%;
+  text-shadow: 0 0 10px rgba(29, 185, 84, 0.3);
 }
 
 .close-player {
-  background: rgba(255, 255, 255, 0.1); /* Subtle background */
+  background: rgba(255, 255, 255, 0.1);
   border: none;
   color: #fff;
-  font-size: 16px;
+  font-size: 14px;
   cursor: pointer;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%; /* Make it a circle */
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.2s;
-}
-
-.close-player:hover {
-  background: rgba(255, 255, 255, 0.2);
 }
 
 .main-audio-player {
   width: 100%;
   height: 35px;
-  filter: invert(100%) hue-rotate(180deg) brightness(1.5);
+  /* Invert colors to match dark theme */
+  filter: invert(100%) hue-rotate(180deg) brightness(1.5) contrast(1.2);
+  opacity: 0.9;
+}
+
+.status-message {
+  text-align: center;
+  color: #888;
+  margin-top: 40px;
+  font-size: 14px;
 }
