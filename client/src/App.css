@@ -1,4 +1,3 @@
-/* 1. Global Reset & Dark Mode Background */
 :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   color-scheme: dark;
@@ -7,7 +6,7 @@
 body {
   margin: 0;
   padding: 0;
-  background-color: #121212; /* Deep Dark Background */
+  background-color: #121212;
   color: #ffffff;
   min-height: 100vh;
 }
@@ -19,139 +18,28 @@ body {
   box-sizing: border-box;
 }
 
-/* 2. Header & Logo Styling */
-/* --- PRO NAVBAR LAYOUT --- */
+/* --- HEADER --- */
 .header-row {
   display: flex;
-  align-items: center;      /* Center vertically */
-  justify-content: space-between; /* Push items to edges (Left & Right) */
-  padding: 10px 0;          /* Add breathing room */
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
   margin-bottom: 20px;
   border-bottom: 1px solid #333;
 }
 
-/* Logo Fix */
 .podcast-logo {
-  width: 120px !important;  /* Good size for "Poddex" text logo */
+  width: 120px !important;
   height: auto;
-  max-height: 50px;         /* Keep it slim */
+  max-height: 50px;
   object-fit: contain;
   margin: 0;
-  /* Removed background-color: #000; so it blends better */
 }
 
-.header-info {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  width: 100%;
-}
-
-/* 3. The Search Bar */
-.search-bar {
-  width: 100%;
-  padding: 16px;
-  border-radius: 12px;
-  border: none;
-  background-color: #2a2a2a; /* Lighter gray for input */
-  color: white;
-  font-size: 16px;
-  margin-bottom: 25px;
-  box-sizing: border-box;
-  outline: none;
-  transition: all 0.3s ease;
-}
-
-.search-bar:focus {
-  background-color: #333;
-  box-shadow: 0 0 0 2px #1db954; /* Spotify Green focus ring */
-}
-
-/* 4. Episode Cards */
-.episode-list {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-}
-
-.episode-card {
-  background-color: #181818; /* Card color */
-  padding: 20px;
-  border-radius: 16px;
-  border: 1px solid #282828;
-  transition: transform 0.2s;
-}
-
-.episode-card:active {
-  transform: scale(0.98); /* Slight click effect */
-}
-
-.episode-card h3 {
-  margin: 0 0 15px 0;
-  font-size: 16px;
-  line-height: 1.5;
-  font-weight: 600;
-  color: #eeeeee;
-}
-
-/* 5. Audio Player Styling */
-audio {
-  width: 100%;
-  height: 40px;
-  border-radius: 20px;
-  /* This filter creates a "Dark Mode" player by inverting the colors */
-  filter: invert(100%) hue-rotate(180deg) brightness(1.5); 
-  opacity: 0.9;
-  outline: none;
-}
-
-/* 6. Messages */
-.status-message {
-  text-align: center;
-  color: #888;
-  margin-top: 40px;
-  font-size: 14px;
-}
-
-.error-message {
-  background-color: rgba(255, 85, 85, 0.1);
-  color: #ff5555;
-  padding: 15px;
-  border-radius: 12px;
-  text-align: center;
-  border: 1px solid #ff5555;
-}
-
-/* Load More Button Styling */
-.load-more-btn {
-  display: block;
-  width: 100%;
-  padding: 15px;
-  margin-top: 20px;
-  background-color: #1db954; /* Spotify Green */
-  color: black;
-  font-weight: bold;
-  font-size: 16px;
-  border: none;
-  border-radius: 30px; /* Fully rounded pill shape */
-  cursor: pointer;
-  transition: transform 0.2s, background-color 0.2s;
-}
-
-.load-more-btn:active {
-  transform: scale(0.95);
-}
-
-.load-more-btn:hover {
-  background-color: #1ed760; /* Slightly brighter on hover */
-}
-
-/* Filter Buttons (Tabs) */
-/* Buttons Fix */
 .filter-buttons {
   display: flex;
   gap: 10px;
-  background: none;         /* Remove grey background */
+  background: none;
   padding: 0;
 }
 
@@ -162,14 +50,77 @@ audio {
   color: white;
   border-radius: 20px;
   border: none;
+  cursor: pointer;
 }
+
 .filter-btn.active {
   background-color: #1db954;
   color: black;
   font-weight: bold;
 }
 
-/* Card Layout Update */
+/* --- SEARCH & CATEGORIES --- */
+.search-bar {
+  width: 100%;
+  padding: 16px;
+  border-radius: 12px;
+  border: none;
+  background-color: #2a2a2a;
+  color: white;
+  font-size: 16px;
+  margin-bottom: 25px;
+  box-sizing: border-box;
+  outline: none;
+}
+.search-bar:focus {
+  background-color: #333;
+  box-shadow: 0 0 0 2px #1db954;
+}
+
+.category-scroll {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 10px;
+  margin-bottom: 15px;
+  white-space: nowrap;
+  -ms-overflow-style: none; 
+  scrollbar-width: none;
+}
+.category-scroll::-webkit-scrollbar { display: none; }
+
+.cat-btn {
+  background-color: #333;
+  color: #ccc;
+  border: 1px solid #444;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 14px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.cat-btn.active {
+  background-color: #1db954;
+  color: black;
+  font-weight: bold;
+  border-color: #1db954;
+}
+
+/* --- CARDS & LIST --- */
+.episode-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  padding-bottom: 120px;
+}
+
+.episode-card {
+  background-color: #181818;
+  padding: 20px;
+  border-radius: 16px;
+  border: 1px solid #282828;
+}
+
 .card-top {
   display: flex;
   justify-content: space-between;
@@ -177,22 +128,22 @@ audio {
   gap: 10px;
 }
 
-/* Heart Button */
+.episode-card h3 {
+  margin: 0 0 15px 0;
+  font-size: 16px;
+  line-height: 1.5;
+  font-weight: 600;
+  color: #eeeeee;
+}
+
 .heart-btn {
   background: none;
   border: none;
   font-size: 24px;
   cursor: pointer;
   padding: 0;
-  line-height: 1;
-  transition: transform 0.2s;
 }
 
-.heart-btn:active {
-  transform: scale(1.3); /* Pop effect when clicked */
-}
-
-/* Card Update: Play Button */
 .play-btn {
   width: 100%;
   margin-top: 15px;
@@ -203,39 +154,50 @@ audio {
   border-radius: 8px;
   cursor: pointer;
   font-weight: bold;
-  transition: background 0.2s;
 }
 
-.play-btn:hover {
-  background-color: #444;
-}
-
-/* Highlight the active card */
 .playing-card {
   border: 1px solid #1db954;
-  background-color: #1a2e1f; /* Subtle green tint */
+  background-color: #1a2e1f;
 }
 
-/* --- THE STICKY PLAYER --- */
+.load-more-btn {
+  display: block;
+  width: 100%;
+  padding: 15px;
+  margin-top: 20px;
+  background-color: #1db954;
+  color: black;
+  font-weight: bold;
+  font-size: 16px;
+  border: none;
+  border-radius: 30px;
+  cursor: pointer;
+}
+
+/* --- MESSAGES & PLAYER --- */
+.status-message {
+  text-align: center;
+  color: #888;
+  margin-top: 40px;
+  font-size: 14px;
+}
+
 .sticky-player {
   position: fixed;
   bottom: 0;
   left: 0;
   width: 100%;
-  background: rgba(20, 20, 20, 0.95); /* Nearly black, slightly transparent */
-  backdrop-filter: blur(10px); /* Glass blur effect */
+  background: rgba(20, 20, 20, 0.95);
+  backdrop-filter: blur(10px);
   border-top: 1px solid #333;
   padding: 15px;
   box-sizing: border-box;
-  z-index: 1000; /* Sit on top of everything */
+  z-index: 1000;
   box-shadow: 0 -5px 20px rgba(0,0,0,0.5);
   animation: slideUp 0.3s ease-out;
 }
-
-@keyframes slideUp {
-  from { transform: translateY(100%); }
-  to { transform: translateY(0); }
-}
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
 
 .player-info {
   display: flex;
@@ -266,45 +228,4 @@ audio {
   width: 100%;
   height: 35px;
   filter: invert(100%) hue-rotate(180deg) brightness(1.5);
-}
-
-/* Add padding to the bottom of the list so the player doesn't cover the last card */
-.episode-list {
-  padding-bottom: 120px;
-}
-
-/* --- CATEGORY SCROLL --- */
-.category-scroll {
-  display: flex;
-  gap: 10px;
-  overflow-x: auto; /* Allows horizontal scrolling */
-  padding-bottom: 10px; /* Space for scrollbar */
-  margin-bottom: 15px;
-  white-space: nowrap; /* Keeps buttons in one line */
-  
-  /* Hide scrollbar for neatness */
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
-}
-.category-scroll::-webkit-scrollbar {
-  display: none; /* Chrome, Safari, Opera */
-}
-
-.cat-btn {
-  background-color: #333;
-  color: #ccc;
-  border: 1px solid #444;
-  padding: 8px 16px;
-  border-radius: 20px;
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.2s;
-  flex-shrink: 0; /* Prevents squishing */
-}
-
-.cat-btn.active {
-  background-color: #1db954; /* Green Highlight */
-  color: black;
-  font-weight: bold;
-  border-color: #1db954;
 }

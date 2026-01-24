@@ -1,17 +1,9 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
-import './App.css?v=2'
+import './App.css?v=3' // <--- Updated to v3 to force cache refresh
 
-// --- 1. CUSTOMIZE YOUR CATEGORIES HERE ---
-// These are the "Keywords" we look for in episode titles.
+// --- CUSTOMIZE CATEGORIES ---
 const CATEGORIES = ["All", "Interview", "Business", "Tech", "Health", "Education"]
-
-const ErrorFallback = ({ error }) => (
-  <div style={{ padding: 20, border: '2px solid red', margin: 20, borderRadius: 10, background: '#fff0f0' }}>
-    <h3 style={{ color: 'red' }}>⚠️ App Crashed</h3>
-    <p>{error}</p>
-  </div>
-);
 
 function App() {
   const [episodes, setEpisodes] = useState([])
@@ -21,12 +13,10 @@ function App() {
   const [error, setError] = useState(null)
   const [visibleCount, setVisibleCount] = useState(20)
   
-  // State for Filters
+  // Filters & State
   const [favorites, setFavorites] = useState([])
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false)
-  const [selectedCategory, setSelectedCategory] = useState("All") // <--- NEW
-
-  // State for Audio Player
+  const [selectedCategory, setSelectedCategory] = useState("All")
   const [currentEpisode, setCurrentEpisode] = useState(null)
 
   useEffect(() => {
@@ -47,6 +37,7 @@ function App() {
         if (data.episodes && Array.isArray(data.episodes)) {
           setEpisodes(data.episodes)
           setPodcastData({
+            title: "Stanton Academy",
             image: "/logo.png"
           })
         } else {
@@ -68,20 +59,14 @@ function App() {
     }
   }
 
-  // --- 2. UPDATED FILTER LOGIC ---
   const filteredEpisodes = episodes.filter(episode => {
-    // A. Check Search Text
     const matchesSearch = episode.title && episode.title.toLowerCase().includes(searchTerm.toLowerCase())
-    
-    // B. Check Category (If not "All", title must contain the keyword)
     const matchesCategory = selectedCategory === "All" || 
       (episode.title && episode.title.toLowerCase().includes(selectedCategory.toLowerCase()))
 
-    // C. Check Favorites Mode
     if (showFavoritesOnly) {
       return matchesSearch && favorites.includes(episode.title)
     }
-    
     return matchesSearch && matchesCategory
   })
   
@@ -93,15 +78,15 @@ function App() {
 
   return (
     <div className="app-container">
-      {/* --- NEW COMPACT HEADER STRUCTURE --- */}
-      {/* --- SIMPLIFIED NAVBAR --- */}
+      
+      {/* --- HEADER SECTION --- */}
       <div className="header-row">
-        {/* 1. Logo on the Left */}
+        {/* Logo Left */}
         {podcastData.image && (
           <img src={podcastData.image} alt="Logo" className="podcast-logo" />
         )}
         
-        {/* 2. Buttons on the Right (No Title Wrapper needed) */}
+        {/* Buttons Right */}
         <div className="filter-buttons">
            <button 
              className={`filter-btn ${!showFavoritesOnly ? 'active' : ''}`}
@@ -116,7 +101,8 @@ function App() {
              Favs ❤️
            </button>
         </div>
-      </div>
+      </div> 
+      {/* 🛑 HEADER CLOSES HERE - LIST IS NOW SAFE BELOW */}
 
       {!showFavoritesOnly && (
         <>
@@ -128,7 +114,6 @@ function App() {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
 
-          {/* --- 3. NEW CATEGORY SCROLLER --- */}
           <div className="category-scroll">
             {CATEGORIES.map(cat => (
               <button 
@@ -149,6 +134,7 @@ function App() {
         <p className="status-message">You haven't liked any episodes yet. 💔</p>
       )}
 
+      {/* --- EPISODE LIST --- */}
       <div className="episode-list">
         {visibleEpisodes.map((episode, index) => {
           const isFav = favorites.includes(episode.title)
@@ -177,6 +163,7 @@ function App() {
         )}
       </div>
 
+      {/* --- PLAYER --- */}
       {currentEpisode && (
         <div className="sticky-player">
           <div className="player-info">
