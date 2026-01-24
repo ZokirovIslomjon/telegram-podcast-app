@@ -92,7 +92,7 @@ function App() {
              className={`filter-btn ${!showFavoritesOnly ? 'active' : ''}`}
              onClick={() => setShowFavoritesOnly(false)}
            >
-             Home 🏠
+             Start 🏠
            </button>
            <button 
              className={`filter-btn ${showFavoritesOnly ? 'active' : ''}`}
