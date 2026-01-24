@@ -3,36 +3,83 @@ import axios from 'axios'
 import './App.css'
 
 function App() {
-  const [status, setStatus] = useState("🚀 App Started")
-  const [debugData, setDebugData] = useState("")
+  const [episodes, setEpisodes] = useState([])
+  const [podcastData, setPodcastData] = useState({ title: "Poddex", image: "" })
+  const [searchTerm, setSearchTerm] = useState("")
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState(null)
 
   useEffect(() => {
-    setStatus("⏳ Fetching data...")
-    
     axios.get('https://telegram-podcast-app.onrender.com/api/episodes')
       .then(response => {
-        setStatus("✅ Data Received")
         const data = response.data
         
-        // DUMP THE RAW DATA to the screen so we can see it safely
-        setDebugData(JSON.stringify(data).slice(0, 500)) 
+        // --- THE GOLDEN FIX ---
+        // We now know exactly where the data lives because we saw it in Debug Mode!
+        if (data.episodes && Array.isArray(data.episodes)) {
+          setEpisodes(data.episodes)
+          
+          // Grab the Title and Image from the main package
+          setPodcastData({
+            title: data.podcastTitle || "My Podcast",
+            image: data.podcastImage || ""
+          })
+          
+          setError(null)
+        } else {
+          setError("Server returned data, but 'episodes' list was missing.")
+        }
+        
+        setIsLoading(false)
       })
       .catch(err => {
-        setStatus(`❌ Error: ${err.message}`)
+        console.error(err)
+        setError("Network Error. Please reload.")
+        setIsLoading(false)
       })
   }, [])
 
+  const filteredEpisodes = episodes.filter(episode =>
+    episode.title && episode.title.toLowerCase().includes(searchTerm.toLowerCase())
+  )
+
   return (
-    <div style={{ padding: '20px', fontFamily: 'monospace', wordWrap: 'break-word' }}>
-      <h1>Debug Mode 🐞</h1>
-      
-      <div style={{ background: '#eee', padding: '10px', margin: '10px 0', borderRadius: '5px' }}>
-        <strong>Status:</strong> {status}
+    <div className="app-container">
+      {/* Header with Logo */}
+      <div className="podcast-header">
+        {podcastData.image && <img src={podcastData.image} alt="Logo" className="podcast-logo" />}
+        <h1>{podcastData.title}</h1>
       </div>
 
-      <h3>Raw Data (First 500 chars):</h3>
-      <div style={{ background: '#333', color: '#0f0', padding: '15px', fontSize: '12px' }}>
-        {debugData || "Waiting for data..."}
+      <input 
+        type="text" 
+        placeholder="Search episodes..." 
+        className="search-bar"
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+      />
+
+      {isLoading && <p className="status-message">⏳ Loading your podcast...</p>}
+      {error && <p className="error-message">❌ {error}</p>}
+
+      <div className="episode-list">
+        {filteredEpisodes.map((episode, index) => (
+          <div key={index} className="episode-card">
+            <h3>{episode.title}</h3>
+            
+            {/* THE AUDIO PLAYER FIX */}
+            {/* We use 'episode.audio' because your Debug Data confirmed it! */}
+            {episode.audio ? (
+              <audio controls preload="none">
+                <source src={episode.audio} type="audio/mpeg" />
+                Your browser does not support audio.
+              </audio>
+            ) : (
+              <p style={{fontSize: '12px', color: 'orange'}}>Audio format unavailable</p>
+            )}
+            
+          </div>
+        ))}
       </div>
     </div>
   )
