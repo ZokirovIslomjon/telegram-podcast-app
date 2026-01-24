@@ -11,7 +11,7 @@ function App() {
   const [speed, setSpeed] = useState(1);
 
   useEffect(() => {
-    axios.get('/api/episodes')
+    axios.get('https://telegram-podcast-app.onrender.com/api/episodes')
       .then(response => {
         setData(response.data);
       })
