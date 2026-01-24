@@ -44,10 +44,11 @@ function App() {
           setEpisodes(data.episodes)
           
           // --- CUSTOM LOGO SECTION STARTS HERE ---
-          setPodcastData({
-            title: "Stanton Academy",  // My Custom Brand Name
-            image: "/logo.png"         // My Custom Logo File
-          })
+          // FIND THIS SECTION:
+setPodcastData({
+  title: "My Podcast",  // <--- This is where the name is coming from!
+  image: "/logo.png"
+})
           // ---------------------------------------
 
         } else {

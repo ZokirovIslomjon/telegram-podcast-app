@@ -29,20 +29,15 @@ body {
 }
 
 .podcast-logo {
-  .podcast-logo {
-  width: 100px;          /* Was 140px */
-  height: 100px;         /* Was 140px */
-  border-radius: 18px;   /* Slightly tighter corners */
-  box-shadow: 0 5px 20px rgba(0,0,0,0.5);
-  margin-bottom: 15px;
-  border: 1px solid #333;
-  object-fit: cover;
- 
-}
-
-  /* --- THE FIX --- */
-  object-fit: cover; /* This prevents stretching! */
-  background-color: #000; /* Fills empty space with black if needed */
+  width: 100%;             /* Let it fill the width of its container */
+  max-width: 200px;        /* But stop it from getting too huge */
+  height: auto;            /* Adjust height automatically to match the image */
+  max-height: 100px;       /* Limit the height */
+  display: block;
+  margin: 0 auto 15px auto; /* Center it */
+  
+  /* THIS IS THE KEY FIX: */
+  object-fit: contain;     /* Show the WHOLE image, do not crop/zoom */
 }
 
 h1 {
