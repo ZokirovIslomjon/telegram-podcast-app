@@ -23,6 +23,8 @@ body {
   padding: 20px;
   box-sizing: border-box;
   position: relative;
+  /* Ensure content doesn't get hidden behind the player */
+  padding-bottom: 100px; 
 }
 
 /* =========================================
@@ -140,8 +142,6 @@ body {
   display: flex;
   flex-direction: column;
   gap: 15px;
-  padding-bottom: 120px; /* Space for sticky player */
-  
   /* --- LAYOUT SAFETY --- */
   width: 100%;        
   margin-top: 20px;   
@@ -196,21 +196,14 @@ body {
   transform: scale(1.2);
 }
 
-/* --- GRADIENT PLAY BUTTON --- */
+/* --- LIQUID PLAY BUTTON --- */
 .play-btn {
   width: 100%;
   margin-top: 15px;
   padding: 12px;
-  
-  /* 1. The Liquid Gradient (Green -> Blue -> Green loop) */
   background: linear-gradient(90deg, #1db954, #00d2ff, #1db954);
-  
-  /* 2. Make background bigger so it can move */
   background-size: 200% 100%;
-  
-  /* 3. The Animation (reuse the liquidFlow we made earlier) */
   animation: liquidFlow 3s linear infinite;
-  
   color: white;
   border: none;
   border-radius: 12px;
@@ -223,7 +216,7 @@ body {
 
 .play-btn:hover {
   transform: scale(1.02);
-  box-shadow: 0 6px 20px rgba(0, 210, 255, 0.5); /* Stronger glow on hover */
+  box-shadow: 0 6px 20px rgba(0, 210, 255, 0.5);
 }
 
 .playing-card {
@@ -237,12 +230,9 @@ body {
   width: 100%;
   padding: 15px;
   margin-top: 25px;
-  
-  /* Same Liquid Effect */
   background: linear-gradient(90deg, #1db954, #00d2ff, #1db954);
   background-size: 200% 100%;
   animation: liquidFlow 3s linear infinite;
-  
   color: white;
   font-weight: bold;
   font-size: 16px;
@@ -280,21 +270,21 @@ body {
   box-shadow: 0 -5px 25px rgba(0,0,0,0.9);
   backdrop-filter: blur(15px);
   
-  /* Smooth Transition between states */
+  /* Smooth Transition */
   transition: height 0.4s cubic-bezier(0.22, 1, 0.36, 1), border-radius 0.4s ease;
-  overflow: hidden; /* Hide the big content when small */
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  justify-content: flex-end; /* Push audio to bottom */
+  justify-content: flex-end;
 }
 
 /* EXPANDED STATE: Full Screen */
 .sticky-player.expanded {
-  height: 100vh; /* Fill entire screen */
+  height: 100vh;
   border-radius: 0;
   padding: 40px 20px;
-  justify-content: space-between; /* Spread content out */
-  background: linear-gradient(135deg, #0f0c29, #302b63, #24243e); /* Richer gradient */
+  justify-content: space-between;
+  background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
 }
 
 /* --- MINIMIZED VIEW STYLES --- */
@@ -305,81 +295,10 @@ body {
   right: 15px;
 }
 
-/* --- FULL SCREEN VIEW STYLES --- */
-.player-fullscreen {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  flex-grow: 1;
-  justify-content: center;
-  animation: fadeIn 0.5s ease;
-}
-
-/* Down Arrow Button */
-.minimize-btn {
-  position: absolute;
-  top: 40px;
-  left: 20px;
-  background: none;
-  border: none;
-  color: #888;
-  font-size: 30px;
-  font-weight: bold;
-  cursor: pointer;
-  padding: 10px;
-  line-height: 0.5;
-}
-
-/* Big Album Art */
-.big-album-art {
-  width: 250px;
-  height: 250px;
-  border-radius: 20px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-  margin-bottom: 30px;
-  object-fit: cover;
-  border: 1px solid rgba(255,255,255,0.1);
-}
-
-.fullscreen-info h2 {
-  font-size: 22px;
-  margin: 0 0 10px 0;
-  color: white;
-  padding: 0 20px;
-}
-
-.fullscreen-info p {
-  color: #1db954; /* Spotify Green */
-  font-size: 14px;
-  font-weight: bold;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  margin: 0;
-}
-
-/* Animation helpers */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes liquidFlow {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-
-@keyframes slideUp {
-  from { transform: translateY(100%); }
-  to { transform: translateY(0); }
-}
-
 .player-info {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 10px;
 }
 
 .player-title {
@@ -407,18 +326,59 @@ body {
   justify-content: center;
 }
 
+/* --- FULL SCREEN VIEW STYLES --- */
+.player-fullscreen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  flex-grow: 1;
+  justify-content: center;
+  animation: fadeIn 0.5s ease;
+}
+
+.minimize-btn {
+  position: absolute;
+  top: 40px;
+  left: 20px;
+  background: none;
+  border: none;
+  color: #888;
+  font-size: 30px;
+  font-weight: bold;
+  cursor: pointer;
+  padding: 10px;
+  line-height: 0.5;
+}
+
+.big-album-art {
+  width: 250px;
+  height: 250px;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  margin-bottom: 30px;
+  object-fit: cover;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.fullscreen-info h2 {
+  font-size: 22px;
+  margin: 0 0 10px 0;
+  color: white;
+  padding: 0 20px;
+}
+
+.fullscreen-info p {
+  color: #1db954;
+  font-size: 14px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin: 0;
+}
+
+/* --- AUDIO CONTROLS --- */
 .main-audio-player {
   width: 100%;
   height: 40px;
-  /* Invert colors for dark mode */
   filter: invert(100%) hue-rotate(180deg) brightness(1.5) contrast(1.2);
-  opacity: 0.9;
-  margin-top: 10px;
-}
-
-.status-message {
-  text-align: center;
-  color: #888;
-  margin-top: 40px;
-  font-size: 14px;
-}
