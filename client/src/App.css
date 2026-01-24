@@ -279,3 +279,39 @@ audio {
 .episode-list {
   padding-bottom: 120px;
 }
+
+/* --- CATEGORY SCROLL --- */
+.category-scroll {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto; /* Allows horizontal scrolling */
+  padding-bottom: 10px; /* Space for scrollbar */
+  margin-bottom: 15px;
+  white-space: nowrap; /* Keeps buttons in one line */
+  
+  /* Hide scrollbar for neatness */
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+.category-scroll::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+.cat-btn {
+  background-color: #333;
+  color: #ccc;
+  border: 1px solid #444;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0; /* Prevents squishing */
+}
+
+.cat-btn.active {
+  background-color: #1db954; /* Green Highlight */
+  color: black;
+  font-weight: bold;
+  border-color: #1db954;
+}

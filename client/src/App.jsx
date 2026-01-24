@@ -2,6 +2,10 @@ import { useState, useEffect } from 'react'
 import axios from 'axios'
 import './App.css'
 
+// --- 1. CUSTOMIZE YOUR CATEGORIES HERE ---
+// These are the "Keywords" we look for in episode titles.
+const CATEGORIES = ["All", "Interview", "Business", "Tech", "Health", "Education"]
+
 const ErrorFallback = ({ error }) => (
   <div style={{ padding: 20, border: '2px solid red', margin: 20, borderRadius: 10, background: '#fff0f0' }}>
     <h3 style={{ color: 'red' }}>⚠️ App Crashed</h3>
@@ -17,12 +21,12 @@ function App() {
   const [error, setError] = useState(null)
   const [visibleCount, setVisibleCount] = useState(20)
   
-  // Favorites State
+  // State for Filters
   const [favorites, setFavorites] = useState([])
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false)
+  const [selectedCategory, setSelectedCategory] = useState("All") // <--- NEW
 
-  // NEW: The "Master" Playing State
-  // This holds the SINGLE episode that is currently playing at the bottom
+  // State for Audio Player
   const [currentEpisode, setCurrentEpisode] = useState(null)
 
   useEffect(() => {
@@ -42,15 +46,10 @@ function App() {
         const data = response.data
         if (data.episodes && Array.isArray(data.episodes)) {
           setEpisodes(data.episodes)
-          
-          // --- CUSTOM LOGO SECTION STARTS HERE ---
-          // FIND THIS SECTION:
-setPodcastData({
-  //title: "My Podcast",  // <--- This is where the name is coming from!
-  image: "/logo.png"
-})
-          // ---------------------------------------
-
+          setPodcastData({
+            title: "Stanton Academy",
+            image: "/logo.png"
+          })
         } else {
           setError("Episodes list missing.")
         }
@@ -70,12 +69,21 @@ setPodcastData({
     }
   }
 
+  // --- 2. UPDATED FILTER LOGIC ---
   const filteredEpisodes = episodes.filter(episode => {
+    // A. Check Search Text
     const matchesSearch = episode.title && episode.title.toLowerCase().includes(searchTerm.toLowerCase())
+    
+    // B. Check Category (If not "All", title must contain the keyword)
+    const matchesCategory = selectedCategory === "All" || 
+      (episode.title && episode.title.toLowerCase().includes(selectedCategory.toLowerCase()))
+
+    // C. Check Favorites Mode
     if (showFavoritesOnly) {
       return matchesSearch && favorites.includes(episode.title)
     }
-    return matchesSearch
+    
+    return matchesSearch && matchesCategory
   })
   
   const visibleEpisodes = filteredEpisodes.slice(0, visibleCount)
@@ -90,12 +98,13 @@ setPodcastData({
         {podcastData.image && <img src={podcastData.image} alt="Logo" className="podcast-logo" />}
         <h1>{podcastData.title}</h1>
 
+        {/* Favorites Toggle */}
         <div className="filter-buttons">
            <button 
              className={`filter-btn ${!showFavoritesOnly ? 'active' : ''}`}
              onClick={() => setShowFavoritesOnly(false)}
            >
-             All Episodes
+             Home 🏠
            </button>
            <button 
              className={`filter-btn ${showFavoritesOnly ? 'active' : ''}`}
@@ -107,13 +116,28 @@ setPodcastData({
       </div>
 
       {!showFavoritesOnly && (
-        <input 
-          type="text" 
-          placeholder="Search episodes..." 
-          className="search-bar"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
+        <>
+          <input 
+            type="text" 
+            placeholder="Search episodes..." 
+            className="search-bar"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+
+          {/* --- 3. NEW CATEGORY SCROLLER --- */}
+          <div className="category-scroll">
+            {CATEGORIES.map(cat => (
+              <button 
+                key={cat}
+                className={`cat-btn ${selectedCategory === cat ? 'active' : ''}`}
+                onClick={() => setSelectedCategory(cat)}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+        </>
       )}
 
       {isLoading && <p className="status-message">⏳ Loading...</p>}
@@ -122,30 +146,21 @@ setPodcastData({
         <p className="status-message">You haven't liked any episodes yet. 💔</p>
       )}
 
-      {/* Main List */}
       <div className="episode-list">
         {visibleEpisodes.map((episode, index) => {
           const isFav = favorites.includes(episode.title)
-          // Check if this specific card is the one currently playing
           const isPlaying = currentEpisode && currentEpisode.title === episode.title
           
           return (
             <div key={index} className={`episode-card ${isPlaying ? 'playing-card' : ''}`}>
               <div className="card-top">
                 <h3>{episode.title}</h3>
-                <button 
-                  className="heart-btn" 
-                  onClick={() => toggleFavorite(episode.title)}
-                >
+                <button className="heart-btn" onClick={() => toggleFavorite(episode.title)}>
                   {isFav ? '❤️' : '🤍'}
                 </button>
               </div>
 
-              {/* Instead of an <audio> tag, we have a PLAY BUTTON */}
-              <button 
-                className="play-btn"
-                onClick={() => setCurrentEpisode(episode)}
-              >
+              <button className="play-btn" onClick={() => setCurrentEpisode(episode)}>
                 {isPlaying ? 'Now Playing 🎵' : '▶️ Play Episode'}
               </button>
             </div>
@@ -159,22 +174,13 @@ setPodcastData({
         )}
       </div>
 
-      {/* NEW: The Sticky Footer Player */}
-      {/* It only appears if an episode is selected */}
       {currentEpisode && (
         <div className="sticky-player">
           <div className="player-info">
             <span className="player-title">{currentEpisode.title}</span>
             <button className="close-player" onClick={() => setCurrentEpisode(null)}>✖</button>
           </div>
-          <audio 
-            controls 
-            autoPlay 
-            src={currentEpisode.audio} 
-            className="main-audio-player"
-          >
-            Your browser does not support audio.
-          </audio>
+          <audio controls autoPlay src={currentEpisode.audio} className="main-audio-player" />
         </div>
       )}
     </div>
