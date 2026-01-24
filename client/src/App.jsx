@@ -17,11 +17,14 @@ function App() {
   const [error, setError] = useState(null)
   const [visibleCount, setVisibleCount] = useState(20)
   
-  // 1. NEW STATE: Favorites & Filter Mode
+  // Favorites State
   const [favorites, setFavorites] = useState([])
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false)
 
-  // 2. Load Favorites from Phone Storage on Startup
+  // NEW: The "Master" Playing State
+  // This holds the SINGLE episode that is currently playing at the bottom
+  const [currentEpisode, setCurrentEpisode] = useState(null)
+
   useEffect(() => {
     const savedFavorites = localStorage.getItem('myFavorites')
     if (savedFavorites) {
@@ -29,7 +32,6 @@ function App() {
     }
   }, [])
 
-  // 3. Save to Phone Storage whenever favorites change
   useEffect(() => {
     localStorage.setItem('myFavorites', JSON.stringify(favorites))
   }, [favorites])
@@ -55,20 +57,16 @@ function App() {
       })
   }, [])
 
-  // 4. Toggle Logic (Add/Remove Heart)
   const toggleFavorite = (title) => {
     if (favorites.includes(title)) {
-      setFavorites(favorites.filter(t => t !== title)) // Remove
+      setFavorites(favorites.filter(t => t !== title))
     } else {
-      setFavorites([...favorites, title]) // Add
+      setFavorites([...favorites, title])
     }
   }
 
-  // 5. Updated Filter Logic
   const filteredEpisodes = episodes.filter(episode => {
     const matchesSearch = episode.title && episode.title.toLowerCase().includes(searchTerm.toLowerCase())
-    
-    // If "Show Favorites" is ON, we only show items that are in the favorites list
     if (showFavoritesOnly) {
       return matchesSearch && favorites.includes(episode.title)
     }
@@ -87,7 +85,6 @@ function App() {
         {podcastData.image && <img src={podcastData.image} alt="Logo" className="podcast-logo" />}
         <h1>{podcastData.title}</h1>
 
-        {/* 6. Filter Toggle Button */}
         <div className="filter-buttons">
            <button 
              className={`filter-btn ${!showFavoritesOnly ? 'active' : ''}`}
@@ -116,41 +113,38 @@ function App() {
 
       {isLoading && <p className="status-message">⏳ Loading...</p>}
       
-      {/* Empty State for Favorites */}
       {showFavoritesOnly && favorites.length === 0 && (
         <p className="status-message">You haven't liked any episodes yet. 💔</p>
       )}
 
+      {/* Main List */}
       <div className="episode-list">
         {visibleEpisodes.map((episode, index) => {
           const isFav = favorites.includes(episode.title)
+          // Check if this specific card is the one currently playing
+          const isPlaying = currentEpisode && currentEpisode.title === episode.title
           
-          try {
-             return (
-              <div key={index} className="episode-card">
-                <div className="card-top">
-                  <h3>{episode.title}</h3>
-                  {/* 7. The Heart Button */}
-                  <button 
-                    className="heart-btn" 
-                    onClick={() => toggleFavorite(episode.title)}
-                  >
-                    {isFav ? '❤️' : '🤍'}
-                  </button>
-                </div>
-
-                {episode.audio ? (
-                  <audio controls preload="none">
-                    <source src={episode.audio} type="audio/mpeg" />
-                  </audio>
-                ) : (
-                  <span style={{fontSize:'12px', color:'#666'}}>Audio unavailable</span>
-                )}
+          return (
+            <div key={index} className={`episode-card ${isPlaying ? 'playing-card' : ''}`}>
+              <div className="card-top">
+                <h3>{episode.title}</h3>
+                <button 
+                  className="heart-btn" 
+                  onClick={() => toggleFavorite(episode.title)}
+                >
+                  {isFav ? '❤️' : '🤍'}
+                </button>
               </div>
-            )
-          } catch (e) {
-            return null
-          }
+
+              {/* Instead of an <audio> tag, we have a PLAY BUTTON */}
+              <button 
+                className="play-btn"
+                onClick={() => setCurrentEpisode(episode)}
+              >
+                {isPlaying ? 'Now Playing 🎵' : '▶️ Play Episode'}
+              </button>
+            </div>
+          )
         })}
         
         {!showFavoritesOnly && visibleCount < filteredEpisodes.length && (
@@ -159,6 +153,25 @@ function App() {
           </button>
         )}
       </div>
+
+      {/* NEW: The Sticky Footer Player */}
+      {/* It only appears if an episode is selected */}
+      {currentEpisode && (
+        <div className="sticky-player">
+          <div className="player-info">
+            <span className="player-title">{currentEpisode.title}</span>
+            <button className="close-player" onClick={() => setCurrentEpisode(null)}>✖</button>
+          </div>
+          <audio 
+            controls 
+            autoPlay 
+            src={currentEpisode.audio} 
+            className="main-audio-player"
+          >
+            Your browser does not support audio.
+          </audio>
+        </div>
+      )}
     </div>
   )
 }
