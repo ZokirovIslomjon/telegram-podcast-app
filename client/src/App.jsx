@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
-import './App.css'
+import './App.css?v=2'
 
 // --- 1. CUSTOMIZE YOUR CATEGORIES HERE ---
 // These are the "Keywords" we look for in episode titles.
