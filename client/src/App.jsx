@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
-import './App.css?v=final_fix' 
+import './App.css?v=final_dropdown' 
 
+// Full list of categories for the dropdown menu
 const CATEGORIES = ["All", "Interview", "Business", "Tech", "Health", "Education"]
 
 function App() {
@@ -11,14 +12,20 @@ function App() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
   const [visibleCount, setVisibleCount] = useState(20)
+  
+  // State for Filters
   const [favorites, setFavorites] = useState([])
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState("All")
+  
+  // State for Audio Player
   const [currentEpisode, setCurrentEpisode] = useState(null)
 
   useEffect(() => {
     const savedFavorites = localStorage.getItem('myFavorites')
-    if (savedFavorites) setFavorites(JSON.parse(savedFavorites))
+    if (savedFavorites) {
+      setFavorites(JSON.parse(savedFavorites))
+    }
   }, [])
 
   useEffect(() => {
@@ -31,7 +38,10 @@ function App() {
         const data = response.data
         if (data.episodes && Array.isArray(data.episodes)) {
           setEpisodes(data.episodes)
-          setPodcastData({ title: "Stanton Academy", image: "/logo.png" })
+          setPodcastData({
+            title: "Stanton Academy",
+            image: "/logo.png"
+          })
         } else {
           setError("Episodes list missing.")
         }
@@ -52,26 +62,38 @@ function App() {
   }
 
   const filteredEpisodes = episodes.filter(episode => {
+    // 1. Search Text
     const matchesSearch = episode.title && episode.title.toLowerCase().includes(searchTerm.toLowerCase())
+    
+    // 2. Category Dropdown
     const matchesCategory = selectedCategory === "All" || 
       (episode.title && episode.title.toLowerCase().includes(selectedCategory.toLowerCase()))
 
-    if (showFavoritesOnly) return matchesSearch && favorites.includes(episode.title)
+    // 3. Favorites Toggle
+    if (showFavoritesOnly) {
+      return matchesSearch && favorites.includes(episode.title)
+    }
+    
     return matchesSearch && matchesCategory
   })
   
   const visibleEpisodes = filteredEpisodes.slice(0, visibleCount)
-  const loadMore = () => setVisibleCount(prevCount => prevCount + 20)
+
+  const loadMore = () => {
+    setVisibleCount(prevCount => prevCount + 20)
+  }
 
   return (
     <div className="app-container">
       
-      {/* --- HEADER ROW (Contains ONLY Logo and Buttons) --- */}
+      {/* --- HEADER ROW (Logo + Buttons) --- */}
       <div className="header-row">
+        {/* Logo Left */}
         {podcastData.image && (
           <img src={podcastData.image} alt="Logo" className="podcast-logo" />
         )}
         
+        {/* Buttons Right */}
         <div className="filter-buttons">
            <button 
              className={`filter-btn ${!showFavoritesOnly ? 'active' : ''}`}
@@ -87,10 +109,9 @@ function App() {
            </button>
         </div>
       </div>
-      {/* --- END OF HEADER ROW --- */}
+      {/* ----------------------------------- */}
 
-      {/* --- MAIN CONTENT STARTS HERE (Must be OUTSIDE header-row) --- */}
-      
+      {/* Only show Search & Dropdown on Home Screen */}
       {!showFavoritesOnly && (
         <>
           <input 
@@ -101,16 +122,20 @@ function App() {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
 
-          <div className="category-scroll">
-            {CATEGORIES.map(cat => (
-              <button 
-                key={cat}
-                className={`cat-btn ${selectedCategory === cat ? 'active' : ''}`}
-                onClick={() => setSelectedCategory(cat)}
-              >
-                {cat}
-              </button>
-            ))}
+          {/* --- NEW CATEGORY DROPDOWN MENU --- */}
+          <div className="dropdown-container">
+            <label>Filter by Category:</label>
+            <select 
+              value={selectedCategory} 
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="category-select"
+            >
+              {CATEGORIES.map(cat => (
+                <option key={cat} value={cat}>
+                  {cat === "All" ? "Show All Episodes" : cat}
+                </option>
+              ))}
+            </select>
           </div>
         </>
       )}
@@ -121,6 +146,7 @@ function App() {
         <p className="status-message">You haven't liked any episodes yet. 💔</p>
       )}
 
+      {/* --- EPISODE LIST --- */}
       <div className="episode-list">
         {visibleEpisodes.map((episode, index) => {
           const isFav = favorites.includes(episode.title)
@@ -149,6 +175,7 @@ function App() {
         )}
       </div>
 
+      {/* --- STICKY AUDIO PLAYER --- */}
       {currentEpisode && (
         <div className="sticky-player">
           <div className="player-info">
