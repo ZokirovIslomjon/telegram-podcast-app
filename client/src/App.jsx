@@ -4,30 +4,37 @@ import './App.css'
 
 function App() {
   const [episodes, setEpisodes] = useState([])
+  const [podcastData, setPodcastData] = useState({ title: "Poddex", image: "" }) // Store Title & Image
   const [searchTerm, setSearchTerm] = useState("")
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [debugInfo, setDebugInfo] = useState(null) // New Debug Tool
 
   useEffect(() => {
-    // Fetch from the live Render backend
     axios.get('https://telegram-podcast-app.onrender.com/api/episodes')
       .then(response => {
-        console.log("Raw Data:", response.data) // Check console for details
-        
         const data = response.data
         
-        // --- SMART DETECTION LOGIC ---
+        // 1. Sherlock Holmes Logic: Find the Array!
+        // We look at every value in the object. If it's a list, that's our episodes!
+        let foundList = []
         if (Array.isArray(data)) {
-          // Scenario 1: It is a direct list
-          setEpisodes(data)
-        } else if (data.items && Array.isArray(data.items)) {
-          // Scenario 2: It is inside 'items'
-          setEpisodes(data.items)
+          foundList = data
         } else {
-          // Scenario 3: Unknown format - Show us the keys!
-          setDebugInfo(JSON.stringify(data).slice(0, 200)) // Show first 200 chars
-          setError("Could not find episode list in data.")
+          // If data is an object, look for the list inside
+          foundList = Object.values(data).find(val => Array.isArray(val)) || []
+          
+          // 2. Also grab the Title and Image if they exist
+          if (data.podcastTitle) setPodcastData(prev => ({ ...prev, title: data.podcastTitle }))
+          if (data.podcastImage) setPodcastData(prev => ({ ...prev, image: data.podcastImage }))
+          // Also check standard RSS parser names
+          if (data.title) setPodcastData(prev => ({ ...prev, title: data.title }))
+          if (data.image && data.image.url) setPodcastData(prev => ({ ...prev, image: data.image.url }))
+        }
+
+        if (foundList.length > 0) {
+          setEpisodes(foundList)
+        } else {
+          setError("Could not find any episodes in the data.")
         }
         
         setIsLoading(false)
@@ -45,7 +52,11 @@ function App() {
 
   return (
     <div className="app-container">
-      <h1>Poddex 🎙️</h1>
+      {/* 3. Dynamic Header with Logo */}
+      <div className="podcast-header">
+        {podcastData.image && <img src={podcastData.image} alt="Podcast Logo" className="podcast-logo" />}
+        <h1>{podcastData.title}</h1>
+      </div>
 
       <input 
         type="text" 
@@ -55,32 +66,17 @@ function App() {
         onChange={(e) => setSearchTerm(e.target.value)}
       />
 
-      {isLoading && <p className="status-message">⏳ Waking up server... (Please wait 30s)</p>}
-      
-      {error && (
-        <div className="error-message">
-          <p>❌ {error}</p>
-          {debugInfo && (
-            <div style={{marginTop: '10px', fontSize: '10px', textAlign: 'left', background: '#333', color: '#fff', padding: '10px'}}>
-              <strong>Debug Data:</strong><br/>
-              {debugInfo}
-            </div>
-          )}
-        </div>
-      )}
+      {isLoading && <p className="status-message">⏳ Loading podcast feed...</p>}
+      {error && <p className="error-message">❌ {error}</p>}
 
       <div className="episode-list">
-        {!isLoading && !error && filteredEpisodes.length === 0 && (
-          <p>No episodes found (List is empty).</p>
-        )}
-
         {filteredEpisodes.map((episode, index) => (
           <div key={index} className="episode-card">
             <h3>{episode.title}</h3>
             {episode.enclosure && (
-              <audio controls>
+              <audio controls preload="none">
                 <source src={episode.enclosure.url} type={episode.enclosure.type} />
-                Your browser does not support the audio element.
+                Your browser does not support audio.
               </audio>
             )}
           </div>
