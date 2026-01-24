@@ -1,384 +1,68 @@
-/* =========================================
-   1. GLOBAL RESET & APP BACKGROUND
-   ========================================= */
-:root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  color-scheme: dark;
-}
+:root { font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif; color-scheme: dark; }
 
 body {
-  margin: 0;
-  padding: 0;
-  min-height: 100vh;
-  color: #ffffff;
-  
-  /* Deep Midnight Purple Gradient Background */
+  margin: 0; padding: 0; min-height: 100vh; color: #ffffff;
   background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-  background-attachment: fixed; /* Keeps gradient locked during scroll */
+  background-attachment: fixed;
 }
 
-.app-container {
-  max-width: 600px;
-  margin: 0 auto;
-  padding: 20px;
-  box-sizing: border-box;
-  position: relative;
-  /* Ensure content doesn't get hidden behind the player */
-  padding-bottom: 100px; 
+.app-container { max-width: 600px; margin: 0 auto; padding: 20px 20px 100px 20px; position: relative; }
+
+.header-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; margin-bottom: 20px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); flex-wrap: wrap; }
+.podcast-logo { width: 120px !important; height: auto; max-height: 50px; object-fit: contain; margin: 0; }
+
+.filter-buttons { display: flex; gap: 10px; }
+.filter-btn { padding: 8px 16px; font-size: 14px; background: linear-gradient(to bottom, #3a3a3a, #2b2b2b); color: #ccc; border-radius: 20px; border: 1px solid #444; cursor: pointer; transition: all 0.3s ease; }
+.filter-btn.active { background: linear-gradient(to bottom, #1db954, #179443); color: white; font-weight: bold; border: 1px solid #1db954; box-shadow: 0 4px 10px rgba(29, 185, 84, 0.4); }
+
+.search-bar { width: 100%; padding: 16px; border-radius: 12px; border: none; background-color: rgba(255, 255, 255, 0.1); color: white; font-size: 16px; margin-bottom: 15px; outline: none; backdrop-filter: blur(5px); box-sizing: border-box; }
+.search-bar:focus { background-color: rgba(255, 255, 255, 0.15); box-shadow: 0 0 0 2px #1db954; }
+
+.dropdown-container { margin-bottom: 30px; }
+.dropdown-container label { display: block; font-size: 12px; color: #aaa; margin-bottom: 8px; margin-left: 5px; }
+.category-select { width: 100%; padding: 14px; font-size: 16px; background-color: rgba(30, 30, 30, 0.8); color: white; border: 1px solid #444; border-radius: 12px; outline: none; appearance: none; background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23FFFFFF%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E"); background-repeat: no-repeat; background-position: right 15px top 50%; background-size: 12px auto; }
+
+.episode-list { display: flex; flex-direction: column; gap: 15px; width: 100%; margin-top: 20px; clear: both; }
+.episode-card { background-color: rgba(24, 24, 24, 0.8); padding: 20px; border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.05); transition: transform 0.2s; backdrop-filter: blur(5px); }
+.episode-card:active { transform: scale(0.98); }
+.card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.episode-card h3 { margin: 0 0 15px 0; font-size: 16px; line-height: 1.5; font-weight: 600; color: #eeeeee; }
+.heart-btn { background: rgba(255, 255, 255, 0.05); border: none; font-size: 20px; cursor: pointer; padding: 8px; border-radius: 50%; line-height: 1; transition: all 0.2s; }
+.heart-btn:active { transform: scale(1.2); }
+
+.play-btn, .load-more-btn { width: 100%; margin-top: 15px; padding: 12px; background: linear-gradient(90deg, #1db954, #00d2ff, #1db954); background-size: 200% 100%; animation: liquidFlow 3s linear infinite; color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; font-size: 15px; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 4px 10px rgba(0, 210, 255, 0.2); }
+.play-btn:hover, .load-more-btn:hover { transform: scale(1.02); box-shadow: 0 6px 20px rgba(0, 210, 255, 0.5); }
+.playing-card { border: 1px solid #1db954; background: linear-gradient(135deg, rgba(29, 185, 84, 0.1), rgba(0, 0, 0, 0)); }
+.load-more-btn { margin-top: 25px; border-radius: 30px; }
+
+/* --- STICKY PLAYER --- */
+.sticky-player { 
+  position: fixed; bottom: 0; left: 0; width: 100%; height: 90px;
+  background: linear-gradient(135deg, #000000, #1a1a1a, #0d0d26); background-size: 200% 200%; animation: liquidFlow 10s ease infinite;
+  border-top: 1px solid rgba(255, 255, 255, 0.1); padding: 15px; box-sizing: border-box; z-index: 2000; 
+  box-shadow: 0 -5px 25px rgba(0,0,0,0.9); backdrop-filter: blur(15px);
+  transition: height 0.4s cubic-bezier(0.22, 1, 0.36, 1); overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end;
 }
 
-/* =========================================
-   2. HEADER & NAVIGATION
-   ========================================= */
-.header-row {
-  display: flex;
-  align-items: center;      
-  justify-content: space-between; /* Logo Left, Buttons Right */
-  padding: 10px 0;          
-  margin-bottom: 20px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1); /* Subtle divider */
-  flex-wrap: wrap; /* Safety: allows wrapping on tiny screens */
+/* --- THE FIX IS HERE: Force Top 0 when expanded --- */
+.sticky-player.expanded { 
+  top: 0; height: 100vh; bottom: auto; border-radius: 0; padding: 40px 20px; justify-content: space-between; 
+  background: linear-gradient(135deg, #0f0c29, #302b63, #24243e); 
 }
 
-.podcast-logo {
-  width: 120px !important;  
-  height: auto;
-  max-height: 50px;         
-  object-fit: contain;
-  margin: 0;
-}
+.player-minimized { position: absolute; top: 10px; left: 15px; right: 15px; }
+.player-info { display: flex; justify-content: space-between; align-items: center; }
+.player-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 14px; font-weight: bold; color: #1db954; max-width: 85%; }
+.close-player { background: rgba(255, 255, 255, 0.1); border: none; color: #fff; font-size: 14px; cursor: pointer; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
 
-/* --- GRADIENT FILTER BUTTONS (Home/Favs) --- */
-.filter-buttons {
-  display: flex;
-  gap: 10px;
-  background: none;         
-  padding: 0;
-}
+.player-fullscreen { display: flex; flex-direction: column; align-items: center; text-align: center; flex-grow: 1; justify-content: center; animation: fadeIn 0.5s ease; }
+.minimize-btn { position: absolute; top: 40px; left: 20px; background: none; border: none; color: #888; font-size: 30px; font-weight: bold; cursor: pointer; padding: 10px; }
+.big-album-art { width: 250px; height: 250px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); margin-bottom: 30px; object-fit: cover; border: 1px solid rgba(255,255,255,0.1); }
+.fullscreen-info h2 { font-size: 22px; margin: 0 0 10px 0; color: white; padding: 0 20px; }
+.fullscreen-info p { color: #1db954; font-size: 14px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin: 0; }
 
-.filter-btn {
-  padding: 8px 16px;
-  font-size: 14px;
-  /* Dark Gradient for inactive */
-  background: linear-gradient(to bottom, #3a3a3a, #2b2b2b);
-  color: #ccc;
-  border-radius: 20px;
-  border: 1px solid #444; 
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-}
+.main-audio-player { width: 100%; height: 40px; filter: invert(100%) hue-rotate(180deg) brightness(1.5) contrast(1.2); opacity: 0.9; margin-top: 10px; }
 
-.filter-btn.active {
-  /* Vibrant Green Gradient for active */
-  background: linear-gradient(to bottom, #1db954, #179443);
-  color: white;
-  font-weight: bold;
-  border: 1px solid #1db954; 
-  box-shadow: 0 4px 10px rgba(29, 185, 84, 0.4); /* Green glow */
-}
-
-/* =========================================
-   3. SEARCH BAR & DROPDOWN
-   ========================================= */
-.search-bar {
-  width: 100%;
-  padding: 16px;
-  border-radius: 12px;
-  border: none;
-  background-color: rgba(255, 255, 255, 0.1); /* Glass effect */
-  color: white;
-  font-size: 16px;
-  margin-bottom: 15px;
-  box-sizing: border-box;
-  outline: none;
-  backdrop-filter: blur(5px);
-}
-
-.search-bar:focus {
-  background-color: rgba(255, 255, 255, 0.15);
-  box-shadow: 0 0 0 2px #1db954; 
-}
-
-/* Category Dropdown */
-.dropdown-container {
-  margin-bottom: 30px;
-}
-
-.dropdown-container label {
-  display: block;
-  font-size: 12px;
-  color: #aaa;
-  margin-bottom: 8px;
-  margin-left: 5px;
-}
-
-.category-select {
-  width: 100%;             
-  padding: 14px;
-  font-size: 16px;
-  background-color: rgba(30, 30, 30, 0.8);  
-  color: white;
-  border: 1px solid #444;
-  border-radius: 12px;
-  outline: none;
-  appearance: none; /* Removes default ugly arrow */
-  
-  /* Custom white arrow icon */
-  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23FFFFFF%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
-  background-repeat: no-repeat;
-  background-position: right 15px top 50%;
-  background-size: 12px auto;
-}
-
-.category-select:focus {
-  border-color: #1db954;
-}
-
-/* =========================================
-   4. EPISODE LIST & CARDS
-   ========================================= */
-.episode-list {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  /* --- LAYOUT SAFETY --- */
-  width: 100%;        
-  margin-top: 20px;   
-  clear: both;        
-}
-
-.episode-card {
-  background-color: rgba(24, 24, 24, 0.8); /* Semi-transparent */
-  padding: 20px;
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  transition: transform 0.2s;
-  backdrop-filter: blur(5px);
-}
-
-.episode-card:active {
-  transform: scale(0.98); 
-}
-
-.card-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 10px;
-}
-
-.episode-card h3 {
-  margin: 0 0 15px 0;
-  font-size: 16px;
-  line-height: 1.5;
-  font-weight: 600;
-  color: #eeeeee;
-}
-
-/* Heart Button */
-.heart-btn {
-  background: rgba(255, 255, 255, 0.05);
-  border: none;
-  font-size: 20px;
-  cursor: pointer;
-  padding: 8px;
-  border-radius: 50%;
-  line-height: 1;
-  transition: all 0.2s;
-}
-
-.heart-btn:hover {
-  background: rgba(255, 255, 255, 0.15);
-}
-
-.heart-btn:active {
-  transform: scale(1.2);
-}
-
-/* --- LIQUID PLAY BUTTON --- */
-.play-btn {
-  width: 100%;
-  margin-top: 15px;
-  padding: 12px;
-  background: linear-gradient(90deg, #1db954, #00d2ff, #1db954);
-  background-size: 200% 100%;
-  animation: liquidFlow 3s linear infinite;
-  color: white;
-  border: none;
-  border-radius: 12px;
-  cursor: pointer;
-  font-weight: bold;
-  font-size: 15px;
-  transition: transform 0.2s, box-shadow 0.2s;
-  box-shadow: 0 4px 10px rgba(0, 210, 255, 0.2);
-}
-
-.play-btn:hover {
-  transform: scale(1.02);
-  box-shadow: 0 6px 20px rgba(0, 210, 255, 0.5);
-}
-
-.playing-card {
-  border: 1px solid #1db954;
-  background: linear-gradient(135deg, rgba(29, 185, 84, 0.1), rgba(0, 0, 0, 0));
-}
-
-/* --- LIQUID LOAD MORE BUTTON --- */
-.load-more-btn {
-  display: block;
-  width: 100%;
-  padding: 15px;
-  margin-top: 25px;
-  background: linear-gradient(90deg, #1db954, #00d2ff, #1db954);
-  background-size: 200% 100%;
-  animation: liquidFlow 3s linear infinite;
-  color: white;
-  font-weight: bold;
-  font-size: 16px;
-  border: none;
-  border-radius: 30px; 
-  cursor: pointer;
-  box-shadow: 0 4px 10px rgba(29, 185, 84, 0.3);
-}
-
-.load-more-btn:active {
-  transform: scale(0.95);
-}
-
-/* =========================================
-   5. EXPANDABLE LIQUID PLAYER
-   ========================================= */
-
-/* Base State: Sticky at Bottom */
-.sticky-player {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 90px; /* Small height for minimized */
-  
-  /* Liquid Background */
-  background: linear-gradient(135deg, #000000, #1a1a1a, #0d0d26);
-  background-size: 200% 200%;
-  animation: liquidFlow 10s ease infinite;
-  
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 15px;
-  box-sizing: border-box;
-  z-index: 2000; 
-  box-shadow: 0 -5px 25px rgba(0,0,0,0.9);
-  backdrop-filter: blur(15px);
-  
-  /* Smooth Transition */
-  transition: height 0.4s cubic-bezier(0.22, 1, 0.36, 1), border-radius 0.4s ease;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-}
-
-/* EXPANDED STATE: Full Screen */
-.sticky-player.expanded {
-  height: 100vh;
-  border-radius: 0;
-  padding: 40px 20px;
-  justify-content: space-between;
-  background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-}
-
-/* --- MINIMIZED VIEW STYLES --- */
-.player-minimized {
-  position: absolute;
-  top: 10px;
-  left: 15px;
-  right: 15px;
-}
-
-.player-info {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.player-title {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  font-size: 14px;
-  font-weight: bold;
-  color: #1db954;
-  max-width: 85%;
-  text-shadow: 0 0 10px rgba(29, 185, 84, 0.3);
-}
-
-.close-player {
-  background: rgba(255, 255, 255, 0.1);
-  border: none;
-  color: #fff;
-  font-size: 14px;
-  cursor: pointer;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* --- FULL SCREEN VIEW STYLES --- */
-.player-fullscreen {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  flex-grow: 1;
-  justify-content: center;
-  animation: fadeIn 0.5s ease;
-}
-
-.minimize-btn {
-  position: absolute;
-  top: 40px;
-  left: 20px;
-  background: none;
-  border: none;
-  color: #888;
-  font-size: 30px;
-  font-weight: bold;
-  cursor: pointer;
-  padding: 10px;
-  line-height: 0.5;
-}
-
-.big-album-art {
-  width: 250px;
-  height: 250px;
-  border-radius: 20px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-  margin-bottom: 30px;
-  object-fit: cover;
-  border: 1px solid rgba(255,255,255,0.1);
-}
-
-.fullscreen-info h2 {
-  font-size: 22px;
-  margin: 0 0 10px 0;
-  color: white;
-  padding: 0 20px;
-}
-
-.fullscreen-info p {
-  color: #1db954;
-  font-size: 14px;
-  font-weight: bold;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  margin: 0;
-}
-
-/* --- AUDIO CONTROLS --- */
-.main-audio-player {
-  width: 100%;
-  height: 40px;
-  filter: invert(100%) hue-rotate(180deg) brightness(1.5) contrast(1.2);
+@keyframes liquidFlow { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+.status-message { text-align: center; color: #888; margin-top: 40px; font-size: 14px; }
