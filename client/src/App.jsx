@@ -4,81 +4,55 @@ import './App.css'
 
 function App() {
   const [episodes, setEpisodes] = useState([])
-  const [podcastData, setPodcastData] = useState({ title: "Poddex", image: "" }) // Store Title & Image
-  const [searchTerm, setSearchTerm] = useState("")
+  const [podcastData, setPodcastData] = useState({ title: "Poddex", image: "" })
   const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState(null)
 
   useEffect(() => {
     axios.get('https://telegram-podcast-app.onrender.com/api/episodes')
       .then(response => {
         const data = response.data
-        
-        // 1. Sherlock Holmes Logic: Find the Array!
-        // We look at every value in the object. If it's a list, that's our episodes!
         let foundList = []
+        
+        // Sherlock Holmes Logic (Same as before)
         if (Array.isArray(data)) {
           foundList = data
         } else {
-          // If data is an object, look for the list inside
           foundList = Object.values(data).find(val => Array.isArray(val)) || []
-          
-          // 2. Also grab the Title and Image if they exist
           if (data.podcastTitle) setPodcastData(prev => ({ ...prev, title: data.podcastTitle }))
           if (data.podcastImage) setPodcastData(prev => ({ ...prev, image: data.podcastImage }))
-          // Also check standard RSS parser names
-          if (data.title) setPodcastData(prev => ({ ...prev, title: data.title }))
           if (data.image && data.image.url) setPodcastData(prev => ({ ...prev, image: data.image.url }))
         }
 
-        if (foundList.length > 0) {
-          setEpisodes(foundList)
-        } else {
-          setError("Could not find any episodes in the data.")
-        }
-        
+        setEpisodes(foundList)
         setIsLoading(false)
       })
       .catch(err => {
-        console.error("Fetch error:", err)
-        setError("Network Error: " + err.message)
+        console.error(err)
         setIsLoading(false)
       })
   }, [])
 
-  const filteredEpisodes = episodes.filter(episode =>
-    episode.title && episode.title.toLowerCase().includes(searchTerm.toLowerCase())
-  )
-
   return (
     <div className="app-container">
-      {/* 3. Dynamic Header with Logo */}
       <div className="podcast-header">
-        {podcastData.image && <img src={podcastData.image} alt="Podcast Logo" className="podcast-logo" />}
+        {podcastData.image && <img src={podcastData.image} alt="Logo" className="podcast-logo" />}
         <h1>{podcastData.title}</h1>
       </div>
 
-      <input 
-        type="text" 
-        placeholder="Search episodes..." 
-        className="search-bar"
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-      />
-
-      {isLoading && <p className="status-message">⏳ Loading podcast feed...</p>}
-      {error && <p className="error-message">❌ {error}</p>}
+      {/* --- X-RAY VISION: SHOW ME THE DATA --- */}
+      {episodes.length > 0 && (
+        <div style={{background: '#222', color: '#0f0', padding: '15px', margin: '20px 0', textAlign: 'left', borderRadius: '8px', fontSize: '12px', wordWrap: 'break-word'}}>
+          <strong>🔎 DATA OF FIRST EPISODE:</strong><br/><br/>
+          {JSON.stringify(episodes[0])}
+        </div>
+      )}
+      {/* ------------------------------------- */}
 
       <div className="episode-list">
-        {filteredEpisodes.map((episode, index) => (
+        {episodes.map((episode, index) => (
           <div key={index} className="episode-card">
             <h3>{episode.title}</h3>
-            {episode.enclosure && (
-              <audio controls preload="none">
-                <source src={episode.enclosure.url} type={episode.enclosure.type} />
-                Your browser does not support audio.
-              </audio>
-            )}
+            {/* We temporarily removed the audio check to focus on the data */}
           </div>
         ))}
       </div>
