@@ -15,13 +15,13 @@ function App() {
         const data = response.data
         let foundList = []
         
-        // Logic to find the list of episodes
+        // 1. Find the list (Sherlock Logic)
         if (Array.isArray(data)) {
           foundList = data
         } else {
           foundList = Object.values(data).find(val => Array.isArray(val)) || []
           
-          // Grab Title and Image
+          // Get Title & Image
           if (data.podcastTitle) setPodcastData(prev => ({ ...prev, title: data.podcastTitle }))
           if (data.podcastImage) setPodcastData(prev => ({ ...prev, image: data.podcastImage }))
           if (data.image && data.image.url) setPodcastData(prev => ({ ...prev, image: data.image.url }))
@@ -36,7 +36,7 @@ function App() {
       })
       .catch(err => {
         console.error(err)
-        setError("Network Error. Please try again later.")
+        setError("Network Error. Please reload.")
         setIsLoading(false)
       })
   }, [])
@@ -47,7 +47,6 @@ function App() {
 
   return (
     <div className="app-container">
-      {/* Header with Logo */}
       <div className="podcast-header">
         {podcastData.image && <img src={podcastData.image} alt="Logo" className="podcast-logo" />}
         <h1>{podcastData.title}</h1>
@@ -61,24 +60,32 @@ function App() {
         onChange={(e) => setSearchTerm(e.target.value)}
       />
 
-      {isLoading && <p className="status-message">⏳ Loading your podcast...</p>}
+      {isLoading && <p className="status-message">⏳ Loading podcast...</p>}
       {error && <p className="error-message">❌ {error}</p>}
 
       <div className="episode-list">
-        {filteredEpisodes.map((episode, index) => (
-          <div key={index} className="episode-card">
-            <h3>{episode.title}</h3>
-            
-            {/* THE FIX: We use 'episode.audio' now! */}
-            {(episode.audio || episode.enclosure) && (
-              <audio controls preload="none">
-                <source src={episode.audio || episode.enclosure?.url} type="audio/mpeg" />
-                Your browser does not support audio.
-              </audio>
-            )}
-            
-          </div>
-        ))}
+        {filteredEpisodes.map((episode, index) => {
+          // --- SAFETY CALCULATION ---
+          // We calculate the URL here, safely, before the HTML part.
+          // This prevents the "White Screen" crash.
+          const audioUrl = episode.audio || (episode.enclosure && episode.enclosure.url) || null;
+          
+          return (
+            <div key={index} className="episode-card">
+              <h3>{episode.title}</h3>
+              
+              {/* Only show player if we found a valid URL */}
+              {audioUrl ? (
+                <audio controls preload="none">
+                  <source src={audioUrl} type="audio/mpeg" />
+                  Your browser does not support audio.
+                </audio>
+              ) : (
+                <p style={{fontSize: '12px', color: 'red'}}>Audio unavailable</p>
+              )}
+            </div>
+          )
+        })}
       </div>
     </div>
   )
