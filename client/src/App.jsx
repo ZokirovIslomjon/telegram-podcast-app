@@ -5,33 +5,41 @@ import './App.css'
 function App() {
   const [episodes, setEpisodes] = useState([])
   const [searchTerm, setSearchTerm] = useState("")
-  const [isLoading, setIsLoading] = useState(true) // Safety 1: Loading State
-  const [error, setError] = useState(null)         // Safety 2: Error State
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [debugInfo, setDebugInfo] = useState(null) // New Debug Tool
 
   useEffect(() => {
+    // Fetch from the live Render backend
     axios.get('https://telegram-podcast-app.onrender.com/api/episodes')
       .then(response => {
-        // Safety 3: Check if the data is actually an array (List)
-        if (Array.isArray(response.data)) {
-          setEpisodes(response.data)
+        console.log("Raw Data:", response.data) // Check console for details
+        
+        const data = response.data
+        
+        // --- SMART DETECTION LOGIC ---
+        if (Array.isArray(data)) {
+          // Scenario 1: It is a direct list
+          setEpisodes(data)
+        } else if (data.items && Array.isArray(data.items)) {
+          // Scenario 2: It is inside 'items'
+          setEpisodes(data.items)
         } else {
-          console.error("Data was not a list:", response.data)
-          // Fallback: If it's wrapped in an object, try to find the list
-          setEpisodes(response.data.items || []) 
+          // Scenario 3: Unknown format - Show us the keys!
+          setDebugInfo(JSON.stringify(data).slice(0, 200)) // Show first 200 chars
+          setError("Could not find episode list in data.")
         }
+        
         setIsLoading(false)
       })
       .catch(err => {
         console.error("Fetch error:", err)
-        setError("Could not load episodes. Server might be waking up.")
+        setError("Network Error: " + err.message)
         setIsLoading(false)
       })
   }, [])
 
-  // Safety 4: Ensure episodes is an array before filtering
-  const safeEpisodes = Array.isArray(episodes) ? episodes : []
-  
-  const filteredEpisodes = safeEpisodes.filter(episode =>
+  const filteredEpisodes = episodes.filter(episode =>
     episode.title && episode.title.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
@@ -47,15 +55,23 @@ function App() {
         onChange={(e) => setSearchTerm(e.target.value)}
       />
 
-      {/* Show Loading Message */}
       {isLoading && <p className="status-message">⏳ Waking up server... (Please wait 30s)</p>}
       
-      {/* Show Error Message */}
-      {error && <p className="error-message">❌ {error}</p>}
+      {error && (
+        <div className="error-message">
+          <p>❌ {error}</p>
+          {debugInfo && (
+            <div style={{marginTop: '10px', fontSize: '10px', textAlign: 'left', background: '#333', color: '#fff', padding: '10px'}}>
+              <strong>Debug Data:</strong><br/>
+              {debugInfo}
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="episode-list">
         {!isLoading && !error && filteredEpisodes.length === 0 && (
-          <p>No episodes found.</p>
+          <p>No episodes found (List is empty).</p>
         )}
 
         {filteredEpisodes.map((episode, index) => (
