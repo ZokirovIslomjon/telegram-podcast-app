@@ -1,10 +1,13 @@
 import { useState, useEffect, useRef } from 'react'
 import axios from 'axios'
-import './App.css?v=final_spotify_fix_v2' 
+import './App.css?v=welcome_screen_v1' 
 
 const CATEGORIES = ["All", "Interview", "Business", "Tech", "Health", "Education"]
 
 function App() {
+  // --- WELCOME SCREEN STATE ---
+  const [showWelcome, setShowWelcome] = useState(false) // Default false until we check storage
+
   const [episodes, setEpisodes] = useState([])
   const [podcastData, setPodcastData] = useState({ title: "Poddex", image: "" })
   const [searchTerm, setSearchTerm] = useState("")
@@ -30,6 +33,20 @@ function App() {
   // --- SWIPE LOGIC STATE ---
   const [touchStart, setTouchStart] = useState(null)
   const [touchEnd, setTouchEnd] = useState(null)
+
+  // 1. CHECK IF USER HAS SEEN WELCOME SCREEN
+  useEffect(() => {
+    const hasSeenWelcome = localStorage.getItem('hasSeenWelcome')
+    if (!hasSeenWelcome) {
+      setShowWelcome(true)
+    }
+  }, [])
+
+  // 2. HANDLE "GET STARTED" CLICK
+  const handleGetStarted = () => {
+    localStorage.setItem('hasSeenWelcome', 'true')
+    setShowWelcome(false)
+  }
 
   useEffect(() => {
     const savedFavorites = localStorage.getItem('myFavorites')
@@ -135,6 +152,23 @@ function App() {
     if (isDownSwipe) setIsPlayerExpanded(false)
   }
 
+  // --- RENDER WELCOME SCREEN IF TRUE ---
+  if (showWelcome) {
+    return (
+      <div className="welcome-container">
+        <div className="welcome-content">
+          <img src="/logo.png" alt="Poddex" className="welcome-logo" />
+          <h1>Welcome to Poddex</h1>
+          <p>Listen to the best episodes from Stanton Academy.</p>
+          <button className="get-started-btn" onClick={handleGetStarted}>
+            Get Started 🚀
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  // --- RENDER MAIN APP ---
   return (
     <div className="app-container">
       
@@ -234,7 +268,6 @@ function App() {
 
               <div className="spotify-info">
                 <h2>{currentEpisode.title}</h2>
-                {/* REMOVED STANTON ACADEMY TEXT HERE */}
               </div>
 
               {/* SLIDER */}
