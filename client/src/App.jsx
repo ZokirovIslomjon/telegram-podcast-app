@@ -1,12 +1,12 @@
 import { useState, useEffect, useRef } from 'react'
 import axios from 'axios'
-import './App.css?v=welcome_screen_v1' 
+import './App.css?v=poddex_rebrand_final' 
 
 const CATEGORIES = ["All", "Interview", "Business", "Tech", "Health", "Education"]
 
 function App() {
   // --- WELCOME SCREEN STATE ---
-  const [showWelcome, setShowWelcome] = useState(false) // Default false until we check storage
+  const [showWelcome, setShowWelcome] = useState(false) 
 
   const [episodes, setEpisodes] = useState([])
   const [podcastData, setPodcastData] = useState({ title: "Poddex", image: "" })
@@ -63,7 +63,8 @@ function App() {
         const data = response.data
         if (data.episodes && Array.isArray(data.episodes)) {
           setEpisodes(data.episodes)
-          setPodcastData({ title: "Stanton Academy", image: "/logo.png" })
+          // --- CHANGED: REMOVED STANTON ACADEMY ---
+          setPodcastData({ title: "Poddex Podcast", image: "/logo.png" })
         } else {
           setError("Episodes list missing.")
         }
@@ -159,7 +160,8 @@ function App() {
         <div className="welcome-content">
           <img src="/logo.png" alt="Poddex" className="welcome-logo" />
           <h1>Welcome to Poddex</h1>
-          <p>Listen to the best episodes from Stanton Academy.</p>
+          {/* --- CHANGED: TEXT UPDATED --- */}
+          <p>Listen to the best episodes from Poddex Podcast.</p>
           <button className="get-started-btn" onClick={handleGetStarted}>
             Get Started 🚀
           </button>
@@ -268,6 +270,7 @@ function App() {
 
               <div className="spotify-info">
                 <h2>{currentEpisode.title}</h2>
+                {/* --- CHANGED: SUBTITLE REMOVED --- */}
               </div>
 
               {/* SLIDER */}
