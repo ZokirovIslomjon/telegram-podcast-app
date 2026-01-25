@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import axios from 'axios'
-import './App.css?v=final_spotify_fix' 
+import './App.css?v=final_spotify_fix_v2' 
 
 const CATEGORIES = ["All", "Interview", "Business", "Tech", "Health", "Education"]
 
