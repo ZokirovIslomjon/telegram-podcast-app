@@ -39,7 +39,7 @@ body {
 .playing-card { border: 1px solid #1db954; background: linear-gradient(135deg, rgba(29, 185, 84, 0.1), rgba(0, 0, 0, 0)); }
 
 /* =========================================
-   3. PRO PLAYER (SLOW SWIPE + SVGs)
+   3. PRO PLAYER (Final Polish)
    ========================================= */
 .sticky-player {
   position: fixed; bottom: 0; left: 0; width: 100%; 
@@ -53,8 +53,7 @@ body {
   z-index: 2000; 
   backdrop-filter: blur(20px);
   
-  /* --- SLOW MOTION PHYSICS --- */
-  /* Increased to 0.9s for a heavy, premium feel */
+  /* Slow Physics (0.9s) */
   transition: height 0.9s cubic-bezier(0.2, 0.8, 0.2, 1), background 0.9s ease;
   
   overflow: hidden;
@@ -82,8 +81,21 @@ body {
 .player-fullscreen { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; animation: fadeIn 0.8s forwards; }
 .minimize-btn { position: absolute; top: 40px; left: 20px; background: none; border: none; color: white; cursor: pointer; opacity: 0.8; }
 
-.art-container { width: 100%; display: flex; justify-content: center; margin-bottom: 40px; margin-top: 20px; }
-.spotify-album-art { width: 280px; height: 280px; border-radius: 12px; box-shadow: 0 20px 40px rgba(0,0,0,0.6); object-fit: cover; }
+/* --- UPDATED SMALLER LOGO --- */
+.art-container { 
+  width: 100%; 
+  display: flex; 
+  justify-content: center; 
+  margin-bottom: 25px; 
+  margin-top: 10px; 
+}
+.spotify-album-art { 
+  width: 220px;       /* Resize to 220px */
+  height: 220px; 
+  border-radius: 12px; 
+  box-shadow: 0 15px 30px rgba(0,0,0,0.5); 
+  object-fit: cover; 
+}
 
 .spotify-info { width: 100%; text-align: left; margin-bottom: 30px; padding: 0 10px; }
 .spotify-info h2 { font-size: 22px; margin: 0 0 5px 0; color: white; font-weight: 700; }
