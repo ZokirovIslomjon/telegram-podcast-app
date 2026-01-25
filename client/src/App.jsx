@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import axios from 'axios'
-import './App.css?v=spotify_ui_v1' 
+import './App.css?v=spotify_real_svg' 
 
 const CATEGORIES = ["All", "Interview", "Business", "Tech", "Health", "Education"]
 
@@ -190,7 +190,7 @@ function App() {
         )}
       </div>
 
-      {/* --- SPOTIFY STYLE PLAYER --- */}
+      {/* --- REAL SPOTIFY PLAYER --- */}
       {currentEpisode && (
         <div 
           className={`sticky-player ${isPlayerExpanded ? 'expanded' : ''}`} 
@@ -210,7 +210,12 @@ function App() {
               </div>
               <div className="mini-controls">
                 <button className="mini-play-btn" onClick={togglePlayPause}>
-                  {isPlaying ? '⏸' : '▶'}
+                  {/* SVG Play/Pause for Mini Player */}
+                  {isPlaying ? (
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><rect x="6" y="4" width="4" height="16" rx="1" /><rect x="14" y="4" width="4" height="16" rx="1" /></svg>
+                  ) : (
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M5 3l14 9-14 9V3z" /></svg>
+                  )}
                 </button>
                 <button className="close-player" onClick={(e) => { e.stopPropagation(); setCurrentEpisode(null); }}>✖</button>
               </div>
@@ -220,7 +225,9 @@ function App() {
           {/* 2. FULL SCREEN SPOTIFY VIEW */}
           {isPlayerExpanded && (
             <div className="player-fullscreen fade-in">
-              <button className="minimize-btn" onClick={(e) => { e.stopPropagation(); setIsPlayerExpanded(false); }}>⌄</button>
+              <button className="minimize-btn" onClick={(e) => { e.stopPropagation(); setIsPlayerExpanded(false); }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
+              </button>
               
               <div className="art-container">
                 <img src={podcastData.image} alt="Album Art" className="spotify-album-art" />
@@ -231,7 +238,7 @@ function App() {
                 <p>Stanton Academy Podcast</p>
               </div>
 
-              {/* CUSTOM PROGRESS BAR */}
+              {/* SLIDER */}
               <div className="progress-container">
                 <input 
                   type="range" 
@@ -246,18 +253,33 @@ function App() {
                 </div>
               </div>
 
-              {/* BIG CONTROLS */}
+              {/* MAIN CONTROLS (SVG) */}
               <div className="big-controls">
-                <button className="control-btn" onClick={() => { audioRef.current.currentTime -= 10 }}>⏪ 10s</button>
-                <button className="play-pause-circle" onClick={togglePlayPause}>
-                  {isPlaying ? '⏸' : '▶'}
+                
+                {/* Skip Back 10s */}
+                <button className="control-btn" onClick={() => { audioRef.current.currentTime -= 10 }}>
+                   <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor"><path d="M11 18V6l-8.5 6 8.5 6zm.5-6l8.5 6V6l-8.5 6z"/></svg>
                 </button>
-                <button className="control-btn" onClick={() => { audioRef.current.currentTime += 10 }}>10s ⏩</button>
+
+                {/* BIG PLAY BUTTON */}
+                <button className="play-pause-circle" onClick={togglePlayPause}>
+                  {isPlaying ? (
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="black"><rect x="6" y="4" width="4" height="16" rx="1" /><rect x="14" y="4" width="4" height="16" rx="1" /></svg>
+                  ) : (
+                     /* Centered Play Triangle */
+                    <svg width="30" height="30" viewBox="0 0 24 24" fill="black" style={{ marginLeft: '4px' }}><path d="M8 5v14l11-7z"/></svg>
+                  )}
+                </button>
+
+                {/* Skip Forward 10s */}
+                <button className="control-btn" onClick={() => { audioRef.current.currentTime += 10 }}>
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor"><path d="M4 18l8.5-6L4 6v12zm9-12v12l8.5-6L13 6z"/></svg>
+                </button>
+
               </div>
             </div>
           )}
 
-          {/* HIDDEN AUDIO ELEMENT (Logic Only) */}
           <audio 
             ref={audioRef}
             src={currentEpisode.audio} 

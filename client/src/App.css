@@ -1,5 +1,5 @@
 /* =========================================
-   1. GLOBAL RESET & BACKGROUND
+   1. GLOBAL RESET
    ========================================= */
 :root {
   font-family: Inter, system-ui, -apple-system, sans-serif;
@@ -10,13 +10,13 @@ body {
   margin: 0; padding: 0; min-height: 100vh; color: #ffffff;
   background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
   background-attachment: fixed;
-  overscroll-behavior: none; /* Prevents bounce */
+  overscroll-behavior: none;
 }
 
 .app-container { max-width: 600px; margin: 0 auto; padding: 20px 20px 120px 20px; box-sizing: border-box; position: relative; }
 
 /* =========================================
-   2. HEADER & BUTTONS
+   2. HEADER & LIST
    ========================================= */
 .header-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; margin-bottom: 20px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
 .podcast-logo { width: 120px !important; height: auto; max-height: 50px; object-fit: contain; }
@@ -25,11 +25,7 @@ body {
 .filter-btn { padding: 8px 16px; font-size: 14px; background: linear-gradient(to bottom, #3a3a3a, #2b2b2b); color: #ccc; border-radius: 20px; border: 1px solid #444; cursor: pointer; transition: all 0.3s ease; }
 .filter-btn.active { background: linear-gradient(to bottom, #1db954, #179443); color: white; font-weight: bold; border: 1px solid #1db954; }
 
-/* =========================================
-   3. SEARCH & EPISODE LIST
-   ========================================= */
 .search-bar { width: 100%; padding: 16px; border-radius: 12px; border: none; background-color: rgba(255, 255, 255, 0.1); color: white; font-size: 16px; margin-bottom: 15px; outline: none; backdrop-filter: blur(5px); box-sizing: border-box; }
-
 .dropdown-container label { display: block; font-size: 12px; color: #aaa; margin-bottom: 8px; margin-left: 5px; }
 .category-select { width: 100%; padding: 14px; font-size: 16px; background-color: rgba(30, 30, 30, 0.8); color: white; border: 1px solid #444; border-radius: 12px; outline: none; appearance: none; margin-bottom: 30px; }
 
@@ -43,14 +39,13 @@ body {
 .playing-card { border: 1px solid #1db954; background: linear-gradient(135deg, rgba(29, 185, 84, 0.1), rgba(0, 0, 0, 0)); }
 
 /* =========================================
-   4. SPOTIFY STYLE STICKY PLAYER
+   3. PRO PLAYER (SLOW SWIPE + SVGs)
    ========================================= */
 .sticky-player {
   position: fixed; bottom: 0; left: 0; width: 100%; 
-  height: 80px; /* Compact when closed */
+  height: 80px; 
   padding-top: 10px;
-  touch-action: none; /* Allow swipe logic */
-  
+  touch-action: none;
   background: rgba(20, 20, 20, 0.95);
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   padding: 10px 20px;
@@ -58,65 +53,61 @@ body {
   z-index: 2000; 
   backdrop-filter: blur(20px);
   
-  /* --- iOS PHYSICS ANIMATION --- */
-  /* This curve (cubic-bezier) mimics the iPhone sheet slide */
-  transition: height 0.6s cubic-bezier(0.32, 0.72, 0, 1), background 0.6s ease;
+  /* --- SLOW MOTION PHYSICS --- */
+  /* Increased to 0.9s for a heavy, premium feel */
+  transition: height 0.9s cubic-bezier(0.2, 0.8, 0.2, 1), background 0.9s ease;
+  
   overflow: hidden;
   display: flex; flex-direction: column; justify-content: flex-end;
 }
 
-/* EXPANDED STATE (Full Screen) */
 .sticky-player.expanded {
   top: 0; height: 100vh; bottom: auto; border-radius: 0;
   padding: 50px 20px 40px 20px;
   justify-content: flex-start;
-  /* Deep gradient background */
   background: linear-gradient(to bottom, #434343, #000000); 
   touch-action: pan-y; overflow-y: auto;
 }
 
 .swipe-handle { width: 40px; height: 5px; background-color: rgba(255, 255, 255, 0.3); border-radius: 5px; margin: 0 auto 15px auto; cursor: grab; }
 
-/* --- MINIMIZED VIEW --- */
 .player-minimized { display: flex; justify-content: space-between; align-items: center; width: 100%; height: 100%; padding-bottom: 10px; }
 .mini-info { display: flex; flex-direction: column; max-width: 60%; }
 .mini-title { font-weight: bold; font-size: 14px; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .mini-controls { display: flex; gap: 15px; align-items: center; }
-.mini-play-btn { background: none; border: none; color: white; font-size: 24px; cursor: pointer; }
-.close-player { background: rgba(255,255,255,0.1); border: none; color: #fff; width: 24px; height: 24px; border-radius: 50%; font-size: 12px; cursor: pointer; }
+.mini-play-btn { background: none; border: none; cursor: pointer; display: flex; align-items: center; }
+.close-player { background: rgba(255,255,255,0.1); border: none; color: #fff; width: 24px; height: 24px; border-radius: 50%; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 
-/* --- FULL SCREEN VIEW (Spotify Look) --- */
+/* FULL SCREEN */
 .player-fullscreen { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; animation: fadeIn 0.8s forwards; }
-.minimize-btn { position: absolute; top: 40px; left: 20px; background: none; border: none; color: white; font-size: 30px; cursor: pointer; transform: rotate(180deg); }
+.minimize-btn { position: absolute; top: 40px; left: 20px; background: none; border: none; color: white; cursor: pointer; opacity: 0.8; }
 
-/* ARTWORK */
-.art-container { width: 100%; display: flex; justify-content: center; margin-bottom: 30px; }
+.art-container { width: 100%; display: flex; justify-content: center; margin-bottom: 40px; margin-top: 20px; }
 .spotify-album-art { width: 280px; height: 280px; border-radius: 12px; box-shadow: 0 20px 40px rgba(0,0,0,0.6); object-fit: cover; }
 
-/* TEXT INFO */
 .spotify-info { width: 100%; text-align: left; margin-bottom: 30px; padding: 0 10px; }
-.spotify-info h2 { font-size: 24px; margin: 0 0 5px 0; color: white; }
+.spotify-info h2 { font-size: 22px; margin: 0 0 5px 0; color: white; font-weight: 700; }
 .spotify-info p { font-size: 16px; color: #b3b3b3; margin: 0; }
 
-/* PROGRESS BAR */
-.progress-container { width: 100%; margin-bottom: 30px; }
-.progress-slider { width: 100%; -webkit-appearance: none; height: 4px; background: rgba(255,255,255,0.3); border-radius: 2px; outline: none; }
+.progress-container { width: 100%; margin-bottom: 40px; }
+.progress-slider { width: 100%; -webkit-appearance: none; height: 4px; background: rgba(255,255,255,0.2); border-radius: 2px; outline: none; }
 .progress-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; background: white; border-radius: 50%; cursor: pointer; }
-.time-row { display: flex; justify-content: space-between; color: #b3b3b3; font-size: 12px; margin-top: 8px; font-variant-numeric: tabular-nums; }
+.time-row { display: flex; justify-content: space-between; color: #b3b3b3; font-size: 12px; margin-top: 10px; font-weight: 500; font-variant-numeric: tabular-nums; }
 
-/* BIG CONTROLS */
-.big-controls { display: flex; align-items: center; justify-content: space-between; width: 80%; }
-.control-btn { background: none; border: none; color: white; font-size: 16px; cursor: pointer; color: #b3b3b3; }
-.control-btn:active { color: white; transform: scale(0.9); }
+.big-controls { display: flex; align-items: center; justify-content: space-between; width: 85%; max-width: 300px; }
+.control-btn { background: none; border: none; color: white; cursor: pointer; color: #b3b3b3; display: flex; align-items: center; justify-content: center; transition: color 0.2s; }
+.control-btn:active { color: white; transform: scale(0.95); }
+
+/* CIRCLE PLAY BUTTON */
 .play-pause-circle { 
-  width: 70px; height: 70px; 
+  width: 72px; height: 72px; 
   background: white; color: black; 
   border-radius: 50%; border: none; 
-  font-size: 30px; display: flex; align-items: center; justify-content: center; 
+  display: flex; align-items: center; justify-content: center; 
   cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.3); 
   transition: transform 0.2s;
 }
-.play-pause-circle:active { transform: scale(0.95); }
+.play-pause-circle:active { transform: scale(0.92); }
 
 @keyframes fadeIn { to { opacity: 1; } }
 @keyframes liquidFlow { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
