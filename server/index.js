@@ -1,34 +1,67 @@
 const express = require('express');
 const cors = require('cors');
 const Parser = require('rss-parser');
+const { Telegraf } = require('telegraf'); 
 require('dotenv').config();
 
 const app = express();
 const parser = new Parser();
 
-// Allow the frontend to talk to this server
-app.use(cors());
+// --- 1. SETUP THE TELEGRAM BOT ---
+// This line automatically grabs the token you saved in Render!
+const bot = new Telegraf(process.env.BOT_TOKEN);
 
-// 1. The RSS Feed URL (We are using "The Daily" by NYT as a test)
-// Later, you can change this to your own podcast URL.
+// The Welcome Message Logic
+bot.start((ctx) => {
+  const welcomeMessage = `
+Welcome to Poddex! 🎧
+
+Discover and listen to the best episodes from the Poddex Podcast. 
+Click the button below to start listening. 👇
+  `;
+
+  ctx.reply(welcomeMessage, {
+    reply_markup: {
+      inline_keyboard: [
+        [
+          { 
+            text: "Open App 🚀", 
+            // ⚠️ Verify this is your correct Vercel link
+            web_app: { url: "https://telegram-podcast-app.vercel.app/" } 
+          }
+        ]
+      ]
+    }
+  });
+});
+
+// Start the Bot
+bot.launch().then(() => {
+    console.log('🤖 Telegram Bot is running...');
+});
+
+// Enable graceful stop for the bot
+process.once('SIGINT', () => bot.stop('SIGINT'));
+process.once('SIGTERM', () => bot.stop('SIGTERM'));
+
+
+// --- 2. EXISTING RSS FEED API ---
+app.use(cors());
 const RSS_URL = 'https://feeds.simplecast.com/54nAGcIl'; 
 
-// 2. The Endpoint: Frontend calls this to get data
 app.get('/api/episodes', async (req, res) => {
     try {
         console.log("Fetching RSS feed...");
         const feed = await parser.parseURL(RSS_URL);
 
-        // Clean up the messy XML data into clean JSON
         const episodes = feed.items.map(item => ({
             title: item.title,
-            audio: item.enclosure?.url, // The MP3 link
+            audio: item.enclosure?.url,
             pubDate: item.pubDate,
             duration: item.itunes?.duration,
             image: item.itunes?.image || feed.image?.url
         }));
 
-        // Send it back to the frontend
         res.json({
             podcastTitle: feed.title,
             podcastImage: feed.image?.url,
@@ -41,6 +74,6 @@ app.get('/api/episodes', async (req, res) => {
     }
 });
 
-// 3. Start the Server
-const PORT = 3000;
-app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));
+// --- 3. START THE SERVER ---
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
