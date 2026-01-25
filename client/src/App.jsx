@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import axios from 'axios'
-import './App.css?v=spotify_real_svg' 
+import './App.css?v=final_spotify_fix' 
 
 const CATEGORIES = ["All", "Interview", "Business", "Tech", "Health", "Education"]
 
@@ -210,7 +210,6 @@ function App() {
               </div>
               <div className="mini-controls">
                 <button className="mini-play-btn" onClick={togglePlayPause}>
-                  {/* SVG Play/Pause for Mini Player */}
                   {isPlaying ? (
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><rect x="6" y="4" width="4" height="16" rx="1" /><rect x="14" y="4" width="4" height="16" rx="1" /></svg>
                   ) : (
@@ -235,7 +234,7 @@ function App() {
 
               <div className="spotify-info">
                 <h2>{currentEpisode.title}</h2>
-                <p>Stanton Academy Podcast</p>
+                {/* REMOVED STANTON ACADEMY TEXT HERE */}
               </div>
 
               {/* SLIDER */}
@@ -253,27 +252,34 @@ function App() {
                 </div>
               </div>
 
-              {/* MAIN CONTROLS (SVG) */}
+              {/* MAIN CONTROLS (CUSTOM 10s ICONS) */}
               <div className="big-controls">
                 
-                {/* Skip Back 10s */}
+                {/* SKIP BACK 10s (Icon with Number) */}
                 <button className="control-btn" onClick={() => { audioRef.current.currentTime -= 10 }}>
-                   <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor"><path d="M11 18V6l-8.5 6 8.5 6zm.5-6l8.5 6V6l-8.5 6z"/></svg>
+                   <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                     <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                     <path d="M3 3v5h5" />
+                     <text x="12" y="15" fontSize="8" stroke="none" fill="currentColor" textAnchor="middle">10</text>
+                   </svg>
                 </button>
 
                 {/* BIG PLAY BUTTON */}
                 <button className="play-pause-circle" onClick={togglePlayPause}>
                   {isPlaying ? (
-                    <svg width="28" height="28" viewBox="0 0 24 24" fill="black"><rect x="6" y="4" width="4" height="16" rx="1" /><rect x="14" y="4" width="4" height="16" rx="1" /></svg>
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="black"><rect x="6" y="4" width="4" height="16" rx="1" /><rect x="14" y="4" width="4" height="16" rx="1" /></svg>
                   ) : (
-                     /* Centered Play Triangle */
-                    <svg width="30" height="30" viewBox="0 0 24 24" fill="black" style={{ marginLeft: '4px' }}><path d="M8 5v14l11-7z"/></svg>
+                    <svg width="34" height="34" viewBox="0 0 24 24" fill="black" style={{ marginLeft: '4px' }}><path d="M8 5v14l11-7z"/></svg>
                   )}
                 </button>
 
-                {/* Skip Forward 10s */}
+                {/* SKIP FORWARD 10s (Icon with Number) */}
                 <button className="control-btn" onClick={() => { audioRef.current.currentTime += 10 }}>
-                  <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor"><path d="M4 18l8.5-6L4 6v12zm9-12v12l8.5-6L13 6z"/></svg>
+                  <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 12a9 9 0 1 1-9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+                    <path d="M21 3v5h-5" />
+                    <text x="12" y="15" fontSize="8" stroke="none" fill="currentColor" textAnchor="middle">10</text>
+                  </svg>
                 </button>
 
               </div>
