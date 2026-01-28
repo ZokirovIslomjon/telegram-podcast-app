@@ -219,6 +219,25 @@ body {
 .track-title { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
 .track-artist { color: var(--text-grey); }
 .controls { display: flex; justify-content: space-between; align-items: center; padding: 0 20px; }
+.control-btn {
+  background: none;
+  border: none;
+  color: var(--text-dark);
+  cursor: pointer;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  transition: transform 0.2s;
+}
+.control-btn:hover {
+  transform: scale(1.1);
+}
+.control-btn:active {
+  transform: scale(0.95);
+}
 .play-btn-large { 
   width: 70px; 
   height: 70px; 
@@ -240,4 +259,67 @@ body {
 }
 .play-btn-large:active {
   transform: scale(0.95);
+}
+
+/* MINI PLAYER */
+.mini-player {
+  position: fixed;
+  bottom: 80px;
+  left: 0;
+  right: 0;
+  max-width: 480px;
+  margin: 0 auto;
+  background: var(--white);
+  display: flex;
+  align-items: center;
+  padding: 12px 20px;
+  box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+  cursor: pointer;
+  z-index: 99;
+  animation: slideUpMini 0.3s ease-out;
+}
+@keyframes slideUpMini {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+.mini-player-img {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  object-fit: cover;
+  margin-right: 12px;
+}
+.mini-player-info {
+  flex: 1;
+  overflow: hidden;
+}
+.mini-player-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-dark);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 2px;
+}
+.mini-player-artist {
+  font-size: 12px;
+  color: var(--text-grey);
+}
+.mini-player-btn {
+  width: 40px;
+  height: 40px;
+  background: var(--primary);
+  border: none;
+  border-radius: 50%;
+  color: white;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+.mini-player-btn:active {
+  transform: scale(0.9);
 }
