@@ -23,37 +23,17 @@ bot.telegram.deleteWebhook().then(() => {
     console.log('🤖 Telegram Bot started!');
 }).catch((err) => console.error('❌ Bot launch failed:', err));
 
-// --- 2. THE PODCAST DATA (The missing part!) ---
-const episodes = [
-  {
-    id: 1,
-    title: "The Future of AI",
-    description: "How AI will change the way we work and live.",
-    cover: "https://images.unsplash.com/photo-1677442136019-21780ecad995",
-    audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
-  },
-  {
-    id: 2,
-    title: "Startup Stories",
-    description: "Interviews with founders who built unicorns.",
-    cover: "https://images.unsplash.com/photo-1556761175-5973dc0f32e7",
-    audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3"
-  },
-  {
-    id: 3,
-    title: "Tech Trends 2026",
-    description: "What's coming next in the world of technology.",
-    cover: "https://images.unsplash.com/photo-1519389950473-47ba0277781c",
-    audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3"
-  },
-  {
-    id: 4,
-    title: "Deep Dive: Coding",
-    description: "Understanding the fundamentals of modern software.",
-    cover: "https://images.unsplash.com/photo-1587620962725-abab7fe55159",
-    audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3"
-  }
-];
+
+
+// --- REPLACE YOUR OLD EPISODES LIST WITH THIS BIG ONE ---
+const episodes = Array.from({ length: 25 }, (_, i) => ({
+    id: i + 1,
+    title: `Episode ${i + 1}: The Tech Frontier`,
+    description: `In this episode, we discuss the latest trends in technology, AI, and the future of coding. Special guest #${i + 1}.`,
+    cover: `https://picsum.photos/seed/${i + 1}/300/300`, // Random professional cover art
+    audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
+    category: ["Tech", "Business", "Education", "Health"][i % 4] // Rotates categories
+}));
 
 // --- 3. THE API ENDPOINT (The App calls this!) ---
 app.get('/api/episodes', (req, res) => {
