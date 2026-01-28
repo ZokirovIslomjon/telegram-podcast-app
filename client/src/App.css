@@ -330,6 +330,7 @@ body {
   margin-bottom: 4px;
   display: -webkit-box;
   -webkit-line-clamp: 1;
+  line-clamp: 1;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -348,7 +349,7 @@ body {
   align-items: center;
   justify-content: center;
   color: var(--primary);
-  transition: background 0.2s;
+  transition: 0.2s;
   flex-shrink: 0;
 }
 
