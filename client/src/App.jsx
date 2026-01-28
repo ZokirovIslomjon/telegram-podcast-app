@@ -10,13 +10,37 @@ const CATEGORIES = [
   { name: "Tech", icon: "💻" }
 ];
 
+// Banners data
+const BANNERS = [
+  {
+    title: "Listen Favourite",
+    subtitle: "Podcast",
+    description: "Enjoy premium sound",
+    icon: "🎧",
+    gradient: "linear-gradient(135deg, #8B7AF0 0%, #6C5DD3 100%)"
+  },
+  {
+    title: "Discover New",
+    subtitle: "Episodes",
+    description: "Trending now",
+    icon: "🔥",
+    gradient: "linear-gradient(135deg, #FF6B9D 0%, #C44569 100%)"
+  }
+];
+
 function App() {
   const [episodes, setEpisodes] = useState([]);
   const [currentEpisode, setCurrentEpisode] = useState(null);
+  const [lastPlayedEpisode, setLastPlayedEpisode] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [activeTab, setActiveTab] = useState('home');
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showSearch, setShowSearch] = useState(false);
   const audioRef = useRef(null);
 
-  // FETCH RSS FEED (The one you just set up!)
+  // FETCH RSS FEED
   useEffect(() => {
     fetch('https://telegram-podcast-app.onrender.com/api/episodes')
       .then(res => res.json())
@@ -24,8 +48,17 @@ function App() {
       .catch(err => console.error(err));
   }, []);
 
+  // Auto-swipe banners every 5 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentBannerIndex((prev) => (prev + 1) % BANNERS.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
   const handlePlay = (episode) => {
     setCurrentEpisode(episode);
+    setLastPlayedEpisode(episode);
     setIsPlaying(true);
   };
 
@@ -34,6 +67,34 @@ function App() {
     else audioRef.current.play();
     setIsPlaying(!isPlaying);
   };
+
+  const handleCategoryClick = (category) => {
+    setSelectedCategory(category.name);
+    setActiveTab('home'); // Stay on home tab but filter by category
+  };
+
+  const handleBannerPlayNow = () => {
+    if (lastPlayedEpisode) {
+      setCurrentEpisode(lastPlayedEpisode);
+      setIsPlaying(true);
+    } else if (episodes.length > 0) {
+      handlePlay(episodes[0]);
+    }
+  };
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    if (tab === 'home') {
+      setSelectedCategory(null);
+    }
+  };
+
+  // Filter episodes by category or search query
+  const filteredEpisodes = episodes.filter(ep => {
+    const matchesCategory = !selectedCategory || ep.title.toLowerCase().includes(selectedCategory.toLowerCase());
+    const matchesSearch = !searchQuery || ep.title.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
 
   // --- 1. FULL SCREEN PLAYER VIEW ---
   if (currentEpisode) {
@@ -85,28 +146,153 @@ function App() {
     )
   }
 
-  // --- 2. HOME SCREEN VIEW ---
+  // --- 2. DISCOVER TAB ---
+  if (activeTab === 'discover') {
+    return (
+      <div className="app-container">
+        <div className="header">
+          <div className="header-title">Discover</div>
+        </div>
+        <div style={{padding: '40px 20px', textAlign: 'center'}}>
+          <div style={{fontSize: '60px', marginBottom: '20px'}}>🧭</div>
+          <h2 style={{color: 'var(--text-dark)', marginBottom: '10px'}}>Discover New Podcasts</h2>
+          <p style={{color: 'var(--text-grey)'}}>Explore trending and featured content</p>
+        </div>
+        <div className="bottom-nav">
+          <button className="nav-item" onClick={() => handleTabChange('home')}>
+            <span>🏠</span><span className="nav-text">Home</span>
+          </button>
+          <button className="nav-item active">
+            <span>🧭</span><span className="nav-text">Discover</span>
+          </button>
+          <button className="nav-item" onClick={() => handleTabChange('library')}>
+            <span>📥</span><span className="nav-text">Library</span>
+          </button>
+          <button className="nav-item" onClick={() => handleTabChange('profile')}>
+            <span>👤</span><span className="nav-text">Profile</span>
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // --- 3. LIBRARY TAB ---
+  if (activeTab === 'library') {
+    return (
+      <div className="app-container">
+        <div className="header">
+          <div className="header-title">Library</div>
+        </div>
+        <div style={{padding: '40px 20px', textAlign: 'center'}}>
+          <div style={{fontSize: '60px', marginBottom: '20px'}}>📥</div>
+          <h2 style={{color: 'var(--text-dark)', marginBottom: '10px'}}>Your Library</h2>
+          <p style={{color: 'var(--text-grey)'}}>Saved episodes and downloads</p>
+        </div>
+        <div className="bottom-nav">
+          <button className="nav-item" onClick={() => handleTabChange('home')}>
+            <span>🏠</span><span className="nav-text">Home</span>
+          </button>
+          <button className="nav-item" onClick={() => handleTabChange('discover')}>
+            <span>🧭</span><span className="nav-text">Discover</span>
+          </button>
+          <button className="nav-item active">
+            <span>📥</span><span className="nav-text">Library</span>
+          </button>
+          <button className="nav-item" onClick={() => handleTabChange('profile')}>
+            <span>👤</span><span className="nav-text">Profile</span>
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // --- 4. PROFILE TAB ---
+  if (activeTab === 'profile') {
+    return (
+      <div className="app-container">
+        <div className="header">
+          <div className="header-title">Profile</div>
+        </div>
+        <div style={{padding: '40px 20px', textAlign: 'center'}}>
+          <div style={{fontSize: '60px', marginBottom: '20px'}}>👤</div>
+          <h2 style={{color: 'var(--text-dark)', marginBottom: '10px'}}>Your Profile</h2>
+          <p style={{color: 'var(--text-grey)'}}>Settings and preferences</p>
+        </div>
+        <div className="bottom-nav">
+          <button className="nav-item" onClick={() => handleTabChange('home')}>
+            <span>🏠</span><span className="nav-text">Home</span>
+          </button>
+          <button className="nav-item" onClick={() => handleTabChange('discover')}>
+            <span>🧭</span><span className="nav-text">Discover</span>
+          </button>
+          <button className="nav-item" onClick={() => handleTabChange('library')}>
+            <span>📥</span><span className="nav-text">Library</span>
+          </button>
+          <button className="nav-item active">
+            <span>👤</span><span className="nav-text">Profile</span>
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // --- 5. HOME SCREEN VIEW ---
   return (
     <div className="app-container">
       {/* Header */}
       <div className="header">
         <div className="header-title">Podcast<span>.</span></div>
         <div style={{display:'flex', gap:'12px'}}>
-           <button className="icon-btn">🔍</button>
+           <button className="icon-btn" onClick={() => setShowSearch(!showSearch)}>🔍</button>
            <button className="icon-btn">🔔</button>
         </div>
       </div>
 
-      {/* Banner */}
+      {/* Search Bar */}
+      {showSearch && (
+        <div style={{padding: '0 20px 20px'}}>
+          <input 
+            type="text"
+            placeholder="Search podcasts..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            style={{
+              width: '100%',
+              padding: '12px 16px',
+              borderRadius: '12px',
+              border: '1px solid #E0E0E0',
+              fontSize: '14px',
+              outline: 'none',
+              boxSizing: 'border-box'
+            }}
+          />
+        </div>
+      )}
+
+      {/* Auto-Swiping Banner */}
       <div className="banner-container">
-        <div className="banner">
+        <div className="banner" style={{background: BANNERS[currentBannerIndex].gradient}}>
           <div className="banner-text">
-            <h2>Listen Favourite<br/>Podcast</h2>
-            <p>Enjoy premium sound</p>
-            <button className="play-now-btn">Play Now</button>
+            <h2>{BANNERS[currentBannerIndex].title}<br/>{BANNERS[currentBannerIndex].subtitle}</h2>
+            <p>{BANNERS[currentBannerIndex].description}</p>
+            <button className="play-now-btn" onClick={handleBannerPlayNow}>Play Now</button>
           </div>
-          {/* Decorative Circle/Image for banner */}
-          <div style={{fontSize:'40px'}}>🎧</div> 
+          <div style={{fontSize:'40px'}}>{BANNERS[currentBannerIndex].icon}</div> 
+        </div>
+        {/* Banner indicators */}
+        <div style={{display: 'flex', justifyContent: 'center', gap: '6px', marginTop: '12px'}}>
+          {BANNERS.map((_, idx) => (
+            <div 
+              key={idx} 
+              style={{
+                width: currentBannerIndex === idx ? '20px' : '6px',
+                height: '6px',
+                borderRadius: '3px',
+                background: currentBannerIndex === idx ? 'var(--primary)' : '#D0D0D0',
+                transition: 'all 0.3s'
+              }}
+            />
+          ))}
         </div>
       </div>
 
@@ -117,21 +303,39 @@ function App() {
       </div>
       <div className="categories-row">
         {CATEGORIES.map(cat => (
-          <div key={cat.name} className="cat-item">
-            <div className="cat-icon">{cat.icon}</div>
-            <span className="cat-name">{cat.name}</span>
+          <div 
+            key={cat.name} 
+            className="cat-item" 
+            onClick={() => handleCategoryClick(cat)}
+            style={{cursor: 'pointer'}}
+          >
+            <div 
+              className="cat-icon"
+              style={{
+                background: selectedCategory === cat.name ? 'var(--primary)' : 'var(--white)',
+                color: selectedCategory === cat.name ? 'white' : 'inherit'
+              }}
+            >
+              {cat.icon}
+            </div>
+            <span className="cat-name" style={{
+              color: selectedCategory === cat.name ? 'var(--primary)' : 'var(--text-grey)',
+              fontWeight: selectedCategory === cat.name ? '600' : '400'
+            }}>
+              {cat.name}
+            </span>
           </div>
         ))}
       </div>
 
       {/* Recommended List */}
       <div className="section-title">
-        <span>Recommended Podcast</span>
+        <span>{selectedCategory ? `${selectedCategory} Podcasts` : 'Recommended Podcast'}</span>
         <span className="see-all">See All</span>
       </div>
 
       <div className="episode-list">
-        {episodes.map((ep, index) => (
+        {filteredEpisodes.map((ep, index) => (
           <div key={index} className="episode-card" onClick={() => handlePlay(ep)}>
             <img src={ep.cover} alt="Cover" className="card-img" />
             <div className="card-info">
@@ -141,22 +345,27 @@ function App() {
             <div className="play-icon-small">▶</div>
           </div>
         ))}
-        {/* Placeholder if loading */}
-        {episodes.length === 0 && <p style={{textAlign:'center', color:'#999'}}>Loading awesome episodes...</p>}
+        {/* Placeholder if loading or no results */}
+        {filteredEpisodes.length === 0 && episodes.length === 0 && (
+          <p style={{textAlign:'center', color:'#999'}}>Loading awesome episodes...</p>
+        )}
+        {filteredEpisodes.length === 0 && episodes.length > 0 && (
+          <p style={{textAlign:'center', color:'#999'}}>No episodes found</p>
+        )}
       </div>
 
       {/* Bottom Nav */}
       <div className="bottom-nav">
-        <button className="nav-item active">
+        <button className="nav-item active" onClick={() => handleTabChange('home')}>
           <span>🏠</span><span className="nav-text">Home</span>
         </button>
-        <button className="nav-item">
+        <button className="nav-item" onClick={() => handleTabChange('discover')}>
           <span>🧭</span><span className="nav-text">Discover</span>
         </button>
-        <button className="nav-item">
+        <button className="nav-item" onClick={() => handleTabChange('library')}>
           <span>📥</span><span className="nav-text">Library</span>
         </button>
-        <button className="nav-item">
+        <button className="nav-item" onClick={() => handleTabChange('profile')}>
           <span>👤</span><span className="nav-text">Profile</span>
         </button>
       </div>
