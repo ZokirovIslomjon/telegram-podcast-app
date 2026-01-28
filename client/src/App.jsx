@@ -1,348 +1,165 @@
 import { useState, useEffect, useRef } from 'react'
 import './App.css'
 
-const CATEGORIES = ["All", "Interview", "Business", "Tech", "Health", "Education"]
+// Categories for visual appeal
+const CATEGORIES = [
+  { name: "Gaming", icon: "🎮" },
+  { name: "Arts", icon: "🎨" },
+  { name: "Fashion", icon: "👠" },
+  { name: "Travel", icon: "✈️" },
+  { name: "Tech", icon: "💻" }
+];
 
 function App() {
-  // --- 1. STATE MANAGEMENT ---
-  const [showWelcome, setShowWelcome] = useState(false) 
-  const [episodes, setEpisodes] = useState([])
-  const [podcastData, setPodcastData] = useState({ title: "Poddex", image: "" })
-  const [searchTerm, setSearchTerm] = useState("")
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [visibleCount, setVisibleCount] = useState(20)
-  
-  // Filters
-  const [favorites, setFavorites] = useState([])
-  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false)
-  const [selectedCategory, setSelectedCategory] = useState("All")
-  
-  // Audio Player State
-  const [currentEpisode, setCurrentEpisode] = useState(null)
-  const [isPlayerExpanded, setIsPlayerExpanded] = useState(false)
-  const [isPlaying, setIsPlaying] = useState(false)
-  const [currentTime, setCurrentTime] = useState(0)
-  const [duration, setDuration] = useState(0)
-  
-  // Refs
-  const audioRef = useRef(null)
+  const [episodes, setEpisodes] = useState([]);
+  const [currentEpisode, setCurrentEpisode] = useState(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const audioRef = useRef(null);
 
-  // --- SWIPE LOGIC STATE ---
-  const [touchStart, setTouchStart] = useState(null)
-  const [touchEnd, setTouchEnd] = useState(null)
-
-  // --- 2. CHECK WELCOME SCREEN ---
-  useEffect(() => {
-    const hasSeenWelcome = localStorage.getItem('hasSeenWelcome')
-    if (!hasSeenWelcome) {
-      setShowWelcome(true)
-    }
-  }, [])
-
-  const handleGetStarted = () => {
-    localStorage.setItem('hasSeenWelcome', 'true')
-    setShowWelcome(false)
-  }
-
-  // --- 3. FAVORITES LOGIC ---
-  useEffect(() => {
-    const savedFavorites = localStorage.getItem('myFavorites')
-    if (savedFavorites) setFavorites(JSON.parse(savedFavorites))
-  }, [])
-
-  useEffect(() => {
-    localStorage.setItem('myFavorites', JSON.stringify(favorites))
-  }, [favorites])
-
-  const toggleFavorite = (title) => {
-    if (favorites.includes(title)) {
-      setFavorites(favorites.filter(t => t !== title))
-    } else {
-      setFavorites([...favorites, title])
-    }
-  }
-
-  // --- 4. FETCH DATA (Using Standard Fetch) ---
+  // FETCH RSS FEED (The one you just set up!)
   useEffect(() => {
     fetch('https://telegram-podcast-app.onrender.com/api/episodes')
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Failed to fetch episodes')
-        }
-        return response.json()
-      })
-      .then(data => {
-        // Handle both { episodes: [...] } and direct array [...] formats
-        const episodeList = data.episodes || data || []
-        
-        if (Array.isArray(episodeList)) {
-          setEpisodes(episodeList)
-          setPodcastData({ title: "Poddex Podcast", image: "/logo.png" })
-        } else {
-          setError("Episodes format invalid.")
-        }
-        setIsLoading(false)
-      })
-      .catch(err => {
-        console.error("Fetch Error:", err)
-        setError("Network Error: " + err.message)
-        setIsLoading(false)
-      })
-  }, [])
+      .then(res => res.json())
+      .then(data => setEpisodes(data))
+      .catch(err => console.error(err));
+  }, []);
 
-  // --- 5. FILTERING LOGIC ---
-  const filteredEpisodes = episodes.filter(episode => {
-    const matchesSearch = episode.title && episode.title.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesCategory = selectedCategory === "All" || 
-      (episode.title && episode.title.toLowerCase().includes(selectedCategory.toLowerCase()))
-
-    if (showFavoritesOnly) return matchesSearch && favorites.includes(episode.title)
-    return matchesSearch && matchesCategory
-  })
-  
-  const visibleEpisodes = filteredEpisodes.slice(0, visibleCount)
-  const loadMore = () => setVisibleCount(prevCount => prevCount + 20)
-
-  // --- 6. AUDIO HANDLERS ---
   const handlePlay = (episode) => {
-    setCurrentEpisode(episode)
-    setIsPlayerExpanded(false) 
-    setIsPlaying(true)
-  }
+    setCurrentEpisode(episode);
+    setIsPlaying(true);
+  };
 
-  const togglePlayPause = (e) => {
-    e.stopPropagation()
-    if (isPlaying) {
-      audioRef.current.pause()
-    } else {
-      audioRef.current.play()
-    }
-    setIsPlaying(!isPlaying)
-  }
+  const togglePlay = () => {
+    if (isPlaying) audioRef.current.pause();
+    else audioRef.current.play();
+    setIsPlaying(!isPlaying);
+  };
 
-  const onTimeUpdate = () => {
-    if (audioRef.current) {
-      setCurrentTime(audioRef.current.currentTime)
-      setDuration(audioRef.current.duration)
-    }
-  }
-
-  const handleSeek = (e) => {
-    const time = e.target.value
-    audioRef.current.currentTime = time
-    setCurrentTime(time)
-  }
-
-  const formatTime = (time) => {
-    if (!time) return "0:00"
-    const minutes = Math.floor(time / 60)
-    const seconds = Math.floor(time % 60)
-    return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`
-  }
-
-  // --- 7. SWIPE HANDLERS ---
-  const onTouchStart = (e) => {
-    setTouchEnd(null)
-    setTouchStart(e.targetTouches[0].clientY)
-  }
-
-  const onTouchMove = (e) => {
-    setTouchEnd(e.targetTouches[0].clientY)
-  }
-
-  const onTouchEnd = () => {
-    if (!touchStart || !touchEnd) return
-    const distance = touchStart - touchEnd
-    const isUpSwipe = distance > 30    
-    const isDownSwipe = distance < -30 
-
-    if (isUpSwipe) setIsPlayerExpanded(true)
-    if (isDownSwipe) setIsPlayerExpanded(false)
-  }
-
-  // --- 8. RENDER: WELCOME SCREEN ---
-  if (showWelcome) {
+  // --- 1. FULL SCREEN PLAYER VIEW ---
+  if (currentEpisode) {
     return (
-      <div className="welcome-container">
-        <div className="welcome-content">
-          <img src="/logo.png" alt="Poddex" className="welcome-logo" />
-          <h1>Welcome to Poddex</h1>
-          <p>Listen to the best episodes from Poddex Podcast.</p>
-          <button className="get-started-btn" onClick={handleGetStarted}>
-            Get Started 🚀
-          </button>
+      <div className="player-overlay">
+        <div className="player-header">
+          <button className="icon-btn" onClick={() => setCurrentEpisode(null)}>↓</button>
+          <span>Now Playing</span>
+          <button className="icon-btn">⋮</button>
         </div>
+        
+        <img src={currentEpisode.cover} alt="Art" className="album-art-large" />
+        
+        <div className="track-info">
+          <h2 className="track-title">{currentEpisode.title}</h2>
+          <p className="track-artist">Innovision Radio</p>
+        </div>
+
+        {/* Fake Waveform Visual */}
+        <div style={{display:'flex', gap:'4px', height:'40px', alignItems:'center', justifyContent:'center', marginBottom:'40px'}}>
+           {[...Array(20)].map((_,i) => (
+             <div key={i} style={{
+               width:'4px', 
+               height: `${Math.random() * 40 + 10}px`, 
+               background:'#6C5DD3', 
+               borderRadius:'2px',
+               opacity: 0.7
+             }}></div>
+           ))}
+        </div>
+
+        <div className="controls">
+          <button className="icon-btn">🔀</button>
+          <button className="icon-btn">⏮</button>
+          <button className="play-btn-large" onClick={togglePlay}>
+            {isPlaying ? '⏸' : '▶'}
+          </button>
+          <button className="icon-btn">⏭</button>
+          <button className="icon-btn">🔁</button>
+        </div>
+
+        <audio 
+          ref={audioRef} 
+          src={currentEpisode.audio} 
+          autoPlay 
+          onEnded={() => setIsPlaying(false)} 
+        />
       </div>
     )
   }
 
-  // --- 9. RENDER: MAIN APP ---
+  // --- 2. HOME SCREEN VIEW ---
   return (
     <div className="app-container">
-      
-      {/* HEADER */}
-      <div className="header-row">
-        {podcastData.image && <img src={podcastData.image} alt="Logo" className="podcast-logo" />}
-        <div className="filter-buttons">
-           <button className={`filter-btn ${!showFavoritesOnly ? 'active' : ''}`} onClick={() => setShowFavoritesOnly(false)}>Home 🏠</button>
-           <button className={`filter-btn ${showFavoritesOnly ? 'active' : ''}`} onClick={() => setShowFavoritesOnly(true)}>Favs ❤️</button>
+      {/* Header */}
+      <div className="header">
+        <div className="header-title">Podcast<span>.</span></div>
+        <div style={{display:'flex', gap:'12px'}}>
+           <button className="icon-btn">🔍</button>
+           <button className="icon-btn">🔔</button>
         </div>
       </div>
-      
-      {/* FILTERS & SEARCH */}
-      {!showFavoritesOnly && (
-        <>
-          <input 
-            type="text" placeholder="Search episodes..." className="search-bar"
-            value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
-          />
-          <div className="dropdown-container">
-            <label>Filter by Category:</label>
-            <select value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)} className="category-select">
-              {CATEGORIES.map(cat => (
-                <option key={cat} value={cat}>{cat === "All" ? "Show All Episodes" : cat}</option>
-              ))}
-            </select>
+
+      {/* Banner */}
+      <div className="banner-container">
+        <div className="banner">
+          <div className="banner-text">
+            <h2>Listen Favourite<br/>Podcast</h2>
+            <p>Enjoy premium sound</p>
+            <button className="play-now-btn">Play Now</button>
           </div>
-        </>
-      )}
-
-      {/* LOADING & ERROR STATES */}
-      {isLoading && <p className="status-message">⏳ Loading episodes...</p>}
-      {error && <p className="status-message error">{error}</p>}
-      {showFavoritesOnly && favorites.length === 0 && <p className="status-message">You haven't liked any episodes yet. 💔</p>}
-
-      {/* EPISODE LIST */}
-      <div className="episode-list">
-        {visibleEpisodes.map((episode, index) => {
-          const isFav = favorites.includes(episode.title)
-          const isPlayingThis = currentEpisode && currentEpisode.title === episode.title
-          return (
-            <div key={index} className={`episode-card ${isPlayingThis ? 'playing-card' : ''}`}>
-              <div className="card-top">
-                <h3>{episode.title}</h3>
-                <button className="heart-btn" onClick={() => toggleFavorite(episode.title)}>{isFav ? '❤️' : '🤍'}</button>
-              </div>
-              <button className="play-btn" onClick={() => handlePlay(episode)}>
-                {isPlayingThis && isPlaying ? 'Now Playing 🎵' : '▶️ Play Episode'}
-              </button>
-            </div>
-          )
-        })}
-        
-        {/* Load More Button */}
-        {!showFavoritesOnly && visibleCount < filteredEpisodes.length && (
-          <button className="load-more-btn" onClick={loadMore}>Load More Episodes 👇</button>
-        )}
+          {/* Decorative Circle/Image for banner */}
+          <div style={{fontSize:'40px'}}>🎧</div> 
+        </div>
       </div>
 
-      {/* --- PLAYER COMPONENT --- */}
-      {currentEpisode && (
-        <div 
-          className={`sticky-player ${isPlayerExpanded ? 'expanded' : ''}`} 
-          onClick={() => !isPlayerExpanded && setIsPlayerExpanded(true)}
-          onTouchStart={onTouchStart}
-          onTouchMove={onTouchMove}
-          onTouchEnd={onTouchEnd}
-        >
-          
-          <div className="swipe-handle"></div>
+      {/* Categories */}
+      <div className="section-title">
+        <span>Category</span>
+        <span className="see-all">See All</span>
+      </div>
+      <div className="categories-row">
+        {CATEGORIES.map(cat => (
+          <div key={cat.name} className="cat-item">
+            <div className="cat-icon">{cat.icon}</div>
+            <span className="cat-name">{cat.name}</span>
+          </div>
+        ))}
+      </div>
 
-          {/* MINIMIZED PLAYER */}
-          {!isPlayerExpanded && (
-            <div className="player-minimized">
-              <div className="mini-info">
-                <span className="mini-title">{currentEpisode.title}</span>
-              </div>
-              <div className="mini-controls">
-                <button className="mini-play-btn" onClick={togglePlayPause}>
-                  {isPlaying ? (
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><rect x="6" y="4" width="4" height="16" rx="1" /><rect x="14" y="4" width="4" height="16" rx="1" /></svg>
-                  ) : (
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M5 3l14 9-14 9V3z" /></svg>
-                  )}
-                </button>
-                <button className="close-player" onClick={(e) => { e.stopPropagation(); setCurrentEpisode(null); }}>✖</button>
-              </div>
+      {/* Recommended List */}
+      <div className="section-title">
+        <span>Recommended Podcast</span>
+        <span className="see-all">See All</span>
+      </div>
+
+      <div className="episode-list">
+        {episodes.map((ep, index) => (
+          <div key={index} className="episode-card" onClick={() => handlePlay(ep)}>
+            <img src={ep.cover} alt="Cover" className="card-img" />
+            <div className="card-info">
+              <h3 className="card-title">{ep.title}</h3>
+              <p className="card-sub">Episode {index + 1} • 35 mins</p>
             </div>
-          )}
+            <div className="play-icon-small">▶</div>
+          </div>
+        ))}
+        {/* Placeholder if loading */}
+        {episodes.length === 0 && <p style={{textAlign:'center', color:'#999'}}>Loading awesome episodes...</p>}
+      </div>
 
-          {/* FULL SCREEN PLAYER */}
-          {isPlayerExpanded && (
-            <div className="player-fullscreen fade-in">
-              <button className="minimize-btn" onClick={(e) => { e.stopPropagation(); setIsPlayerExpanded(false); }}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
-              </button>
-              
-              <div className="art-container">
-                <img src={podcastData.image} alt="Album Art" className="spotify-album-art" />
-              </div>
-
-              <div className="spotify-info">
-                <h2>{currentEpisode.title}</h2>
-              </div>
-
-              {/* Progress Slider */}
-              <div className="progress-container">
-                <input 
-                  type="range" 
-                  min="0" max={duration || 0} 
-                  value={currentTime} 
-                  onChange={handleSeek}
-                  className="progress-slider"
-                />
-                <div className="time-row">
-                  <span>{formatTime(currentTime)}</span>
-                  <span>{formatTime(duration)}</span>
-                </div>
-              </div>
-
-              {/* CONTROLS */}
-              <div className="big-controls">
-                
-                {/* 10s Back */}
-                <button className="control-btn" onClick={() => { audioRef.current.currentTime -= 10 }}>
-                   <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                     <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
-                     <path d="M3 3v5h5" />
-                     <text x="12" y="15" fontSize="8" stroke="none" fill="currentColor" textAnchor="middle">10</text>
-                   </svg>
-                </button>
-
-                {/* Play/Pause */}
-                <button className="play-pause-circle" onClick={togglePlayPause}>
-                  {isPlaying ? (
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="black"><rect x="6" y="4" width="4" height="16" rx="1" /><rect x="14" y="4" width="4" height="16" rx="1" /></svg>
-                  ) : (
-                    <svg width="34" height="34" viewBox="0 0 24 24" fill="black" style={{ marginLeft: '4px' }}><path d="M8 5v14l11-7z"/></svg>
-                  )}
-                </button>
-
-                {/* 10s Forward */}
-                <button className="control-btn" onClick={() => { audioRef.current.currentTime += 10 }}>
-                  <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M21 12a9 9 0 1 1-9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
-                    <path d="M21 3v5h-5" />
-                    <text x="12" y="15" fontSize="8" stroke="none" fill="currentColor" textAnchor="middle">10</text>
-                  </svg>
-                </button>
-
-              </div>
-            </div>
-          )}
-
-          <audio 
-            ref={audioRef}
-            src={currentEpisode.audio} 
-            autoPlay 
-            onTimeUpdate={onTimeUpdate}
-            onEnded={() => setIsPlaying(false)}
-            onPlay={() => setIsPlaying(true)}
-            onPause={() => setIsPlaying(false)}
-          />
-        </div>
-      )}
+      {/* Bottom Nav */}
+      <div className="bottom-nav">
+        <button className="nav-item active">
+          <span>🏠</span><span className="nav-text">Home</span>
+        </button>
+        <button className="nav-item">
+          <span>🧭</span><span className="nav-text">Discover</span>
+        </button>
+        <button className="nav-item">
+          <span>📥</span><span className="nav-text">Library</span>
+        </button>
+        <button className="nav-item">
+          <span>👤</span><span className="nav-text">Profile</span>
+        </button>
+      </div>
     </div>
   )
 }
