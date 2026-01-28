@@ -36,8 +36,11 @@ Click the button below to start listening. 👇
 });
 
 // Start the Bot
-bot.launch().then(() => {
+// PASTE THIS INSTEAD ✅
+bot.launch({ dropPendingUpdates: true }).then(() => {
     console.log('🤖 Telegram Bot is running...');
+}).catch(err => {
+    console.error('❌ Bot failed to start:', err);
 });
 
 // Enable graceful stop for the bot
