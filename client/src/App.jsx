@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef } from 'react'
 import axios from 'axios'
-import './App.css?v=poddex_rebrand_final' 
+import './App.css?v=poddex_final_v3' 
 
 const CATEGORIES = ["All", "Interview", "Business", "Tech", "Health", "Education"]
 
 function App() {
-  // --- WELCOME SCREEN STATE ---
+  // --- 1. WELCOME SCREEN STATE ---
   const [showWelcome, setShowWelcome] = useState(false) 
 
   const [episodes, setEpisodes] = useState([])
@@ -34,7 +34,7 @@ function App() {
   const [touchStart, setTouchStart] = useState(null)
   const [touchEnd, setTouchEnd] = useState(null)
 
-  // 1. CHECK IF USER HAS SEEN WELCOME SCREEN
+  // --- 2. CHECK IF USER HAS SEEN WELCOME SCREEN ---
   useEffect(() => {
     const hasSeenWelcome = localStorage.getItem('hasSeenWelcome')
     if (!hasSeenWelcome) {
@@ -42,7 +42,7 @@ function App() {
     }
   }, [])
 
-  // 2. HANDLE "GET STARTED" CLICK
+  // --- 3. HANDLE "GET STARTED" CLICK ---
   const handleGetStarted = () => {
     localStorage.setItem('hasSeenWelcome', 'true')
     setShowWelcome(false)
@@ -63,7 +63,7 @@ function App() {
         const data = response.data
         if (data.episodes && Array.isArray(data.episodes)) {
           setEpisodes(data.episodes)
-          // --- CHANGED: REMOVED STANTON ACADEMY ---
+          // BRANDING: Poddex Podcast
           setPodcastData({ title: "Poddex Podcast", image: "/logo.png" })
         } else {
           setError("Episodes list missing.")
@@ -153,14 +153,15 @@ function App() {
     if (isDownSwipe) setIsPlayerExpanded(false)
   }
 
-  // --- RENDER WELCOME SCREEN IF TRUE ---
+  // --- 4. RENDER WELCOME SCREEN (GATEKEEPER) ---
+  // If showWelcome is true, we ONLY return this block.
+  // The rest of the app does not load yet.
   if (showWelcome) {
     return (
       <div className="welcome-container">
         <div className="welcome-content">
           <img src="/logo.png" alt="Poddex" className="welcome-logo" />
           <h1>Welcome to Poddex</h1>
-          {/* --- CHANGED: TEXT UPDATED --- */}
           <p>Listen to the best episodes from Poddex Podcast.</p>
           <button className="get-started-btn" onClick={handleGetStarted}>
             Get Started 🚀
@@ -170,7 +171,7 @@ function App() {
     )
   }
 
-  // --- RENDER MAIN APP ---
+  // --- 5. RENDER MAIN APP ---
   return (
     <div className="app-container">
       
@@ -270,7 +271,6 @@ function App() {
 
               <div className="spotify-info">
                 <h2>{currentEpisode.title}</h2>
-                {/* --- CHANGED: SUBTITLE REMOVED --- */}
               </div>
 
               {/* SLIDER */}
