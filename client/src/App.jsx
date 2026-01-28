@@ -43,6 +43,20 @@ function App() {
   const [duration, setDuration] = useState(0);
   const audioRef = useRef(null);
 
+  // Initialize Telegram WebApp
+  useEffect(() => {
+    if (window.Telegram?.WebApp) {
+      const tg = window.Telegram.WebApp;
+      tg.ready();
+      tg.expand();
+      tg.enableClosingConfirmation();
+      
+      // Set theme colors
+      tg.setHeaderColor('#F8F8F8');
+      tg.setBackgroundColor('#F8F8F8');
+    }
+  }, []);
+
   // FETCH RSS FEED
   useEffect(() => {
     fetch('https://telegram-podcast-app.onrender.com/api/episodes')
