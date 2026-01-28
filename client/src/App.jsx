@@ -38,6 +38,9 @@ function App() {
   const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearch, setShowSearch] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
   const audioRef = useRef(null);
 
   // FETCH RSS FEED
@@ -66,6 +69,57 @@ function App() {
     if (isPlaying) audioRef.current.pause();
     else audioRef.current.play();
     setIsPlaying(!isPlaying);
+  };
+
+  const skipForward = () => {
+    if (audioRef.current) {
+      audioRef.current.currentTime = Math.min(audioRef.current.currentTime + 10, duration);
+    }
+  };
+
+  const skipBackward = () => {
+    if (audioRef.current) {
+      audioRef.current.currentTime = Math.max(audioRef.current.currentTime - 10, 0);
+    }
+  };
+
+  const handleTimeUpdate = () => {
+    if (audioRef.current) {
+      setCurrentTime(audioRef.current.currentTime);
+    }
+  };
+
+  const handleLoadedMetadata = () => {
+    if (audioRef.current) {
+      setDuration(audioRef.current.duration);
+    }
+  };
+
+  const handleSeek = (e) => {
+    const progressBar = e.currentTarget;
+    const clickPosition = e.nativeEvent.offsetX;
+    const progressBarWidth = progressBar.offsetWidth;
+    const newTime = (clickPosition / progressBarWidth) * duration;
+    if (audioRef.current) {
+      audioRef.current.currentTime = newTime;
+      setCurrentTime(newTime);
+    }
+  };
+
+  const formatTime = (time) => {
+    if (isNaN(time)) return '0:00';
+    const minutes = Math.floor(time / 60);
+    const seconds = Math.floor(time % 60);
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  };
+
+  const toggleFavorite = () => {
+    setIsFavorite(!isFavorite);
+  };
+
+  const closePlayer = () => {
+    // Don't stop audio, just minimize the player
+    setCurrentEpisode(null);
   };
 
   const handleCategoryClick = (category) => {
@@ -101,9 +155,15 @@ function App() {
     return (
       <div className="player-overlay">
         <div className="player-header">
-          <button className="icon-btn" onClick={() => setCurrentEpisode(null)}>↓</button>
-          <span>Now Playing</span>
-          <button className="icon-btn">⋮</button>
+          <button className="icon-btn" onClick={closePlayer}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <path d="M19 12L5 12M12 19L5 12L12 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
+          <span style={{fontSize: '14px', fontWeight: '600', color: 'var(--text-grey)'}}>Now Playing</span>
+          <button className="icon-btn" onClick={toggleFavorite}>
+            {isFavorite ? '❤️' : '🤍'}
+          </button>
         </div>
         
         <img src={currentEpisode.cover} alt="Art" className="album-art-large" />
@@ -113,34 +173,73 @@ function App() {
           <p className="track-artist">Innovision Radio</p>
         </div>
 
-        {/* Fake Waveform Visual */}
-        <div style={{display:'flex', gap:'4px', height:'40px', alignItems:'center', justifyContent:'center', marginBottom:'40px'}}>
-           {[...Array(20)].map((_,i) => (
-             <div key={i} style={{
-               width:'4px', 
-               height: `${Math.random() * 40 + 10}px`, 
-               background:'#6C5DD3', 
-               borderRadius:'2px',
-               opacity: 0.7
-             }}></div>
-           ))}
+        {/* Progress Bar */}
+        <div style={{marginBottom: '12px', padding: '0 20px'}}>
+          <div 
+            onClick={handleSeek}
+            style={{
+              width: '100%',
+              height: '4px',
+              background: '#E0E0E0',
+              borderRadius: '2px',
+              position: 'relative',
+              cursor: 'pointer',
+              marginBottom: '8px'
+            }}
+          >
+            <div style={{
+              width: `${(currentTime / duration) * 100}%`,
+              height: '100%',
+              background: 'var(--primary)',
+              borderRadius: '2px',
+              position: 'relative'
+            }}>
+              <div style={{
+                position: 'absolute',
+                right: '-6px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                width: '12px',
+                height: '12px',
+                background: 'var(--primary)',
+                borderRadius: '50%',
+                boxShadow: '0 2px 4px rgba(108, 93, 211, 0.4)'
+              }}></div>
+            </div>
+          </div>
+          <div style={{display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: 'var(--text-grey)'}}>
+            <span>{formatTime(currentTime)}</span>
+            <span>{formatTime(duration)}</span>
+          </div>
         </div>
 
         <div className="controls">
-          <button className="icon-btn">🔀</button>
-          <button className="icon-btn">⏮</button>
+          <button className="icon-btn" style={{fontSize: '24px'}}>🔀</button>
+          <button className="control-btn" onClick={skipBackward}>
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M11.5 5v6l-5-5v14l5-5v6z"/>
+            </svg>
+            <span style={{fontSize: '10px', position: 'absolute', fontWeight: '600'}}>10</span>
+          </button>
           <button className="play-btn-large" onClick={togglePlay}>
             {isPlaying ? '⏸' : '▶'}
           </button>
-          <button className="icon-btn">⏭</button>
-          <button className="icon-btn">🔁</button>
+          <button className="control-btn" onClick={skipForward}>
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12.5 5v6l5-5v14l-5-5v6z"/>
+            </svg>
+            <span style={{fontSize: '10px', position: 'absolute', fontWeight: '600'}}>10</span>
+          </button>
+          <button className="icon-btn" style={{fontSize: '24px'}}>🔁</button>
         </div>
 
         <audio 
           ref={audioRef} 
           src={currentEpisode.audio} 
           autoPlay 
-          onEnded={() => setIsPlaying(false)} 
+          onEnded={() => setIsPlaying(false)}
+          onTimeUpdate={handleTimeUpdate}
+          onLoadedMetadata={handleLoadedMetadata}
         />
       </div>
     )
@@ -172,6 +271,27 @@ function App() {
             <span>👤</span><span className="nav-text">Profile</span>
           </button>
         </div>
+        {lastPlayedEpisode && (
+          <div className="mini-player" onClick={() => setCurrentEpisode(lastPlayedEpisode)}>
+            <img src={lastPlayedEpisode.cover} alt="Cover" className="mini-player-img" />
+            <div className="mini-player-info">
+              <div className="mini-player-title">{lastPlayedEpisode.title}</div>
+              <div className="mini-player-artist">Innovision Radio</div>
+            </div>
+            <button className="mini-player-btn" onClick={(e) => { e.stopPropagation(); togglePlay(); }}>
+              {isPlaying ? '⏸' : '▶'}
+            </button>
+          </div>
+        )}
+        {lastPlayedEpisode && (
+          <audio 
+            ref={audioRef} 
+            src={lastPlayedEpisode.audio}
+            onEnded={() => setIsPlaying(false)}
+            onTimeUpdate={handleTimeUpdate}
+            onLoadedMetadata={handleLoadedMetadata}
+          />
+        )}
       </div>
     );
   }
@@ -202,6 +322,27 @@ function App() {
             <span>👤</span><span className="nav-text">Profile</span>
           </button>
         </div>
+        {lastPlayedEpisode && (
+          <div className="mini-player" onClick={() => setCurrentEpisode(lastPlayedEpisode)}>
+            <img src={lastPlayedEpisode.cover} alt="Cover" className="mini-player-img" />
+            <div className="mini-player-info">
+              <div className="mini-player-title">{lastPlayedEpisode.title}</div>
+              <div className="mini-player-artist">Innovision Radio</div>
+            </div>
+            <button className="mini-player-btn" onClick={(e) => { e.stopPropagation(); togglePlay(); }}>
+              {isPlaying ? '⏸' : '▶'}
+            </button>
+          </div>
+        )}
+        {lastPlayedEpisode && (
+          <audio 
+            ref={audioRef} 
+            src={lastPlayedEpisode.audio}
+            onEnded={() => setIsPlaying(false)}
+            onTimeUpdate={handleTimeUpdate}
+            onLoadedMetadata={handleLoadedMetadata}
+          />
+        )}
       </div>
     );
   }
@@ -232,6 +373,27 @@ function App() {
             <span>👤</span><span className="nav-text">Profile</span>
           </button>
         </div>
+        {lastPlayedEpisode && (
+          <div className="mini-player" onClick={() => setCurrentEpisode(lastPlayedEpisode)}>
+            <img src={lastPlayedEpisode.cover} alt="Cover" className="mini-player-img" />
+            <div className="mini-player-info">
+              <div className="mini-player-title">{lastPlayedEpisode.title}</div>
+              <div className="mini-player-artist">Innovision Radio</div>
+            </div>
+            <button className="mini-player-btn" onClick={(e) => { e.stopPropagation(); togglePlay(); }}>
+              {isPlaying ? '⏸' : '▶'}
+            </button>
+          </div>
+        )}
+        {lastPlayedEpisode && (
+          <audio 
+            ref={audioRef} 
+            src={lastPlayedEpisode.audio}
+            onEnded={() => setIsPlaying(false)}
+            onTimeUpdate={handleTimeUpdate}
+            onLoadedMetadata={handleLoadedMetadata}
+          />
+        )}
       </div>
     );
   }
@@ -369,6 +531,31 @@ function App() {
           <span>👤</span><span className="nav-text">Profile</span>
         </button>
       </div>
+
+      {/* Mini Player - shows when audio is playing but player is closed */}
+      {lastPlayedEpisode && !currentEpisode && (
+        <div className="mini-player" onClick={() => setCurrentEpisode(lastPlayedEpisode)}>
+          <img src={lastPlayedEpisode.cover} alt="Cover" className="mini-player-img" />
+          <div className="mini-player-info">
+            <div className="mini-player-title">{lastPlayedEpisode.title}</div>
+            <div className="mini-player-artist">Innovision Radio</div>
+          </div>
+          <button className="mini-player-btn" onClick={(e) => { e.stopPropagation(); togglePlay(); }}>
+            {isPlaying ? '⏸' : '▶'}
+          </button>
+        </div>
+      )}
+
+      {/* Hidden audio element for background playback */}
+      {lastPlayedEpisode && !currentEpisode && (
+        <audio 
+          ref={audioRef} 
+          src={lastPlayedEpisode.audio}
+          onEnded={() => setIsPlaying(false)}
+          onTimeUpdate={handleTimeUpdate}
+          onLoadedMetadata={handleLoadedMetadata}
+        />
+      )}
     </div>
   )
 }
