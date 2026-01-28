@@ -1,18 +1,25 @@
 {
-  "name": "podcast-client",
+  "name": "telegram-podcast-app",
   "version": "1.0.0",
-  "description": "Telegram Podcast Bot",
   "main": "index.js",
   "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
     "start": "node index.js"
   },
   "dependencies": {
-    "cors": "^2.8.5",
-    "dotenv": "^16.3.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "telegraf": "^4.15.0",
     "express": "^4.18.2",
-    "telegraf": "^4.15.0"
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1"
   },
-  "engines": {
-    "node": ">=18.0.0"
+  "devDependencies": {
+    "@types/react": "^18.2.15",
+    "@types/react-dom": "^18.2.7",
+    "@vitejs/plugin-react": "^4.0.3",
+    "vite": "^4.4.5"
   }
 }
