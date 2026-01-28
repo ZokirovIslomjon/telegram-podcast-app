@@ -1,13 +1,11 @@
 import { useState, useEffect, useRef } from 'react'
-import axios from 'axios'
-import './App.css?v=poddex_final_v3' 
+import './App.css'
 
 const CATEGORIES = ["All", "Interview", "Business", "Tech", "Health", "Education"]
 
 function App() {
-  // --- 1. WELCOME SCREEN STATE ---
+  // --- 1. STATE MANAGEMENT ---
   const [showWelcome, setShowWelcome] = useState(false) 
-
   const [episodes, setEpisodes] = useState([])
   const [podcastData, setPodcastData] = useState({ title: "Poddex", image: "" })
   const [searchTerm, setSearchTerm] = useState("")
@@ -34,7 +32,7 @@ function App() {
   const [touchStart, setTouchStart] = useState(null)
   const [touchEnd, setTouchEnd] = useState(null)
 
-  // --- 2. CHECK IF USER HAS SEEN WELCOME SCREEN ---
+  // --- 2. CHECK WELCOME SCREEN ---
   useEffect(() => {
     const hasSeenWelcome = localStorage.getItem('hasSeenWelcome')
     if (!hasSeenWelcome) {
@@ -42,12 +40,12 @@ function App() {
     }
   }, [])
 
-  // --- 3. HANDLE "GET STARTED" CLICK ---
   const handleGetStarted = () => {
     localStorage.setItem('hasSeenWelcome', 'true')
     setShowWelcome(false)
   }
 
+  // --- 3. FAVORITES LOGIC ---
   useEffect(() => {
     const savedFavorites = localStorage.getItem('myFavorites')
     if (savedFavorites) setFavorites(JSON.parse(savedFavorites))
@@ -57,25 +55,6 @@ function App() {
     localStorage.setItem('myFavorites', JSON.stringify(favorites))
   }, [favorites])
 
-  useEffect(() => {
-    axios.get('https://telegram-podcast-app.onrender.com/api/episodes')
-      .then(response => {
-        const data = response.data
-        if (data.episodes && Array.isArray(data.episodes)) {
-          setEpisodes(data.episodes)
-          // BRANDING: Poddex Podcast
-          setPodcastData({ title: "Poddex Podcast", image: "/logo.png" })
-        } else {
-          setError("Episodes list missing.")
-        }
-        setIsLoading(false)
-      })
-      .catch(err => {
-        setError("Network Error: " + err.message)
-        setIsLoading(false)
-      })
-  }, [])
-
   const toggleFavorite = (title) => {
     if (favorites.includes(title)) {
       setFavorites(favorites.filter(t => t !== title))
@@ -84,6 +63,35 @@ function App() {
     }
   }
 
+  // --- 4. FETCH DATA (Using Standard Fetch) ---
+  useEffect(() => {
+    fetch('https://telegram-podcast-app.onrender.com/api/episodes')
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Failed to fetch episodes')
+        }
+        return response.json()
+      })
+      .then(data => {
+        // Handle both { episodes: [...] } and direct array [...] formats
+        const episodeList = data.episodes || data || []
+        
+        if (Array.isArray(episodeList)) {
+          setEpisodes(episodeList)
+          setPodcastData({ title: "Poddex Podcast", image: "/logo.png" })
+        } else {
+          setError("Episodes format invalid.")
+        }
+        setIsLoading(false)
+      })
+      .catch(err => {
+        console.error("Fetch Error:", err)
+        setError("Network Error: " + err.message)
+        setIsLoading(false)
+      })
+  }, [])
+
+  // --- 5. FILTERING LOGIC ---
   const filteredEpisodes = episodes.filter(episode => {
     const matchesSearch = episode.title && episode.title.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesCategory = selectedCategory === "All" || 
@@ -96,7 +104,7 @@ function App() {
   const visibleEpisodes = filteredEpisodes.slice(0, visibleCount)
   const loadMore = () => setVisibleCount(prevCount => prevCount + 20)
 
-  // --- AUDIO LOGIC ---
+  // --- 6. AUDIO HANDLERS ---
   const handlePlay = (episode) => {
     setCurrentEpisode(episode)
     setIsPlayerExpanded(false) 
@@ -133,7 +141,7 @@ function App() {
     return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`
   }
 
-  // --- SWIPE HANDLERS ---
+  // --- 7. SWIPE HANDLERS ---
   const onTouchStart = (e) => {
     setTouchEnd(null)
     setTouchStart(e.targetTouches[0].clientY)
@@ -146,16 +154,14 @@ function App() {
   const onTouchEnd = () => {
     if (!touchStart || !touchEnd) return
     const distance = touchStart - touchEnd
-    const isUpSwipe = distance > 30   
+    const isUpSwipe = distance > 30    
     const isDownSwipe = distance < -30 
 
     if (isUpSwipe) setIsPlayerExpanded(true)
     if (isDownSwipe) setIsPlayerExpanded(false)
   }
 
-  // --- 4. RENDER WELCOME SCREEN (GATEKEEPER) ---
-  // If showWelcome is true, we ONLY return this block.
-  // The rest of the app does not load yet.
+  // --- 8. RENDER: WELCOME SCREEN ---
   if (showWelcome) {
     return (
       <div className="welcome-container">
@@ -171,7 +177,7 @@ function App() {
     )
   }
 
-  // --- 5. RENDER MAIN APP ---
+  // --- 9. RENDER: MAIN APP ---
   return (
     <div className="app-container">
       
@@ -184,7 +190,7 @@ function App() {
         </div>
       </div>
       
-      {/* FILTERS */}
+      {/* FILTERS & SEARCH */}
       {!showFavoritesOnly && (
         <>
           <input 
@@ -202,7 +208,9 @@ function App() {
         </>
       )}
 
-      {isLoading && <p className="status-message">⏳ Loading...</p>}
+      {/* LOADING & ERROR STATES */}
+      {isLoading && <p className="status-message">⏳ Loading episodes...</p>}
+      {error && <p className="status-message error">{error}</p>}
       {showFavoritesOnly && favorites.length === 0 && <p className="status-message">You haven't liked any episodes yet. 💔</p>}
 
       {/* EPISODE LIST */}
@@ -222,12 +230,14 @@ function App() {
             </div>
           )
         })}
+        
+        {/* Load More Button */}
         {!showFavoritesOnly && visibleCount < filteredEpisodes.length && (
           <button className="load-more-btn" onClick={loadMore}>Load More Episodes 👇</button>
         )}
       </div>
 
-      {/* --- REAL SPOTIFY PLAYER --- */}
+      {/* --- PLAYER COMPONENT --- */}
       {currentEpisode && (
         <div 
           className={`sticky-player ${isPlayerExpanded ? 'expanded' : ''}`} 
@@ -239,7 +249,7 @@ function App() {
           
           <div className="swipe-handle"></div>
 
-          {/* 1. MINIMIZED VIEW */}
+          {/* MINIMIZED PLAYER */}
           {!isPlayerExpanded && (
             <div className="player-minimized">
               <div className="mini-info">
@@ -258,7 +268,7 @@ function App() {
             </div>
           )}
 
-          {/* 2. FULL SCREEN SPOTIFY VIEW */}
+          {/* FULL SCREEN PLAYER */}
           {isPlayerExpanded && (
             <div className="player-fullscreen fade-in">
               <button className="minimize-btn" onClick={(e) => { e.stopPropagation(); setIsPlayerExpanded(false); }}>
@@ -273,7 +283,7 @@ function App() {
                 <h2>{currentEpisode.title}</h2>
               </div>
 
-              {/* SLIDER */}
+              {/* Progress Slider */}
               <div className="progress-container">
                 <input 
                   type="range" 
@@ -288,10 +298,10 @@ function App() {
                 </div>
               </div>
 
-              {/* MAIN CONTROLS (CUSTOM 10s ICONS) */}
+              {/* CONTROLS */}
               <div className="big-controls">
                 
-                {/* SKIP BACK 10s (Icon with Number) */}
+                {/* 10s Back */}
                 <button className="control-btn" onClick={() => { audioRef.current.currentTime -= 10 }}>
                    <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                      <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
@@ -300,7 +310,7 @@ function App() {
                    </svg>
                 </button>
 
-                {/* BIG PLAY BUTTON */}
+                {/* Play/Pause */}
                 <button className="play-pause-circle" onClick={togglePlayPause}>
                   {isPlaying ? (
                     <svg width="32" height="32" viewBox="0 0 24 24" fill="black"><rect x="6" y="4" width="4" height="16" rx="1" /><rect x="14" y="4" width="4" height="16" rx="1" /></svg>
@@ -309,7 +319,7 @@ function App() {
                   )}
                 </button>
 
-                {/* SKIP FORWARD 10s (Icon with Number) */}
+                {/* 10s Forward */}
                 <button className="control-btn" onClick={() => { audioRef.current.currentTime += 10 }}>
                   <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M21 12a9 9 0 1 1-9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
