@@ -34,18 +34,18 @@ const Icons = {
     </svg>
   ),
   Play: () => (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
       <polygon points="5 3 19 12 5 21 5 3"/>
     </svg>
   ),
   Pause: () => (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
       <rect x="6" y="4" width="4" height="16"/>
       <rect x="14" y="4" width="4" height="16"/>
     </svg>
   ),
   Heart: ({ filled }) => (
-    <svg width="28" height="28" viewBox="0 0 24 24" fill={filled ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill={filled ? "#FF4458" : "none"} stroke={filled ? "#FF4458" : "currentColor"} strokeWidth="2">
       <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
     </svg>
   ),
@@ -55,39 +55,39 @@ const Icons = {
     </svg>
   ),
   Close: () => (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
       <line x1="18" y1="6" x2="6" y2="18"/>
       <line x1="6" y1="6" x2="18" y2="18"/>
     </svg>
   ),
   SkipNext: () => (
-    <svg width="36" height="36" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1">
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
       <polygon points="5 4 15 12 5 20 5 4"/>
-      <line x1="19" y1="5" x2="19" y2="19" strokeWidth="2"/>
+      <line x1="19" y1="5" x2="19" y2="19" stroke="currentColor" strokeWidth="2"/>
     </svg>
   ),
   SkipPrevious: () => (
-    <svg width="36" height="36" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1">
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
       <polygon points="19 20 9 12 19 4 19 20"/>
-      <line x1="5" y1="19" x2="5" y2="5" strokeWidth="2"/>
+      <line x1="5" y1="19" x2="5" y2="5" stroke="currentColor" strokeWidth="2"/>
     </svg>
   ),
   Forward10: () => (
     <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M15 3h6v6M9 21H3v-6"/>
-      <path d="M21 3l-7 7M3 21l7-7"/>
-      <text x="10" y="15" fontSize="8" fill="currentColor" fontWeight="bold">10</text>
+      <path d="M22 12A10 10 0 1 1 12 2"/>
+      <path d="M22 2v6h-6"/>
+      <text x="9" y="15" fontSize="7" fill="currentColor" fontWeight="bold">+10</text>
     </svg>
   ),
   Backward10: () => (
     <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M9 3H3v6M15 21h6v-6"/>
-      <path d="M3 3l7 7M21 21l-7-7"/>
-      <text x="10" y="15" fontSize="8" fill="currentColor" fontWeight="bold">10</text>
+      <path d="M2 12A10 10 0 1 0 12 2"/>
+      <path d="M2 2v6h6"/>
+      <text x="9" y="15" fontSize="7" fill="currentColor" fontWeight="bold">-10</text>
     </svg>
   ),
   Shuffle: () => (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <polyline points="16 3 21 3 21 8"/>
       <line x1="4" y1="20" x2="21" y2="3"/>
       <polyline points="21 16 21 21 16 21"/>
@@ -96,7 +96,7 @@ const Icons = {
     </svg>
   ),
   Repeat: () => (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <polyline points="17 1 21 5 17 9"/>
       <path d="M3 11V9a4 4 0 0 1 4-4h14"/>
       <polyline points="7 23 3 19 7 15"/>
@@ -104,30 +104,14 @@ const Icons = {
     </svg>
   ),
   Camera: () => (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
       <circle cx="12" cy="13" r="4"/>
-    </svg>
-  ),
-  Coin: () => (
-    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <circle cx="12" cy="12" r="10" fill="#FFD700" stroke="#FFA500"/>
-      <text x="12" y="16" fontSize="12" fill="#FFA500" fontWeight="bold" textAnchor="middle">$</text>
-    </svg>
-  ),
-  Trophy: () => (
-    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/>
-      <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/>
-      <path d="M4 22h16"/>
-      <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/>
-      <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/>
-      <path d="M18 2H6v7a6 6 0 0 0 12 0V2z" fill="#FFD700"/>
     </svg>
   )
 };
 
-// Categories - Replaced Fashion with Education
+// Categories
 const CATEGORIES = [
   { name: "Gaming", icon: "🎮" },
   { name: "Arts", icon: "🎨" },
@@ -157,15 +141,6 @@ const BANNERS = [
   }
 ];
 
-// Mock leaderboard data
-const MOCK_LEADERBOARD = [
-  { rank: 1, name: "Alex Johnson", coins: 2450, avatar: "🏆" },
-  { rank: 2, name: "Maria Garcia", coins: 2180, avatar: "🥈" },
-  { rank: 3, name: "Chen Wei", coins: 1950, avatar: "🥉" },
-  { rank: 4, name: "Sarah Miller", coins: 1720, avatar: "👤" },
-  { rank: 5, name: "Ahmed Hassan", coins: 1590, avatar: "👤" },
-];
-
 function App() {
   const [episodes, setEpisodes] = useState([]);
   const [currentEpisode, setCurrentEpisode] = useState(null);
@@ -182,10 +157,40 @@ function App() {
   const [telegramUser, setTelegramUser] = useState(null);
   const [showAllEpisodes, setShowAllEpisodes] = useState(false);
   const [profileImage, setProfileImage] = useState(null);
-  const [userCoins, setUserCoins] = useState(150);
-  const [userRank, setUserRank] = useState(8);
+  const [userCoins, setUserCoins] = useState(0);
+  const [userRank, setUserRank] = useState(0);
+  const [leaderboard, setLeaderboard] = useState([]);
+  const [listeningTime, setListeningTime] = useState(0);
   const audioRef = useRef(null);
   const fileInputRef = useRef(null);
+
+  // Load data from localStorage on mount
+  useEffect(() => {
+    const savedData = localStorage.getItem('podcastAppData');
+    if (savedData) {
+      const data = JSON.parse(savedData);
+      setFavorites(data.favorites || []);
+      setProfileImage(data.profileImage || null);
+      setUserCoins(data.userCoins || 0);
+      setUserRank(data.userRank || 0);
+      setListeningTime(data.listeningTime || 0);
+      setLeaderboard(data.leaderboard || []);
+    }
+  }, []);
+
+  // Save data to localStorage whenever it changes
+  useEffect(() => {
+    const dataToSave = {
+      favorites,
+      profileImage,
+      userCoins,
+      userRank,
+      listeningTime,
+      leaderboard,
+      lastUpdated: new Date().toISOString()
+    };
+    localStorage.setItem('podcastAppData', JSON.stringify(dataToSave));
+  }, [favorites, profileImage, userCoins, userRank, listeningTime, leaderboard]);
 
   useEffect(() => {
     if (window.Telegram?.WebApp) {
@@ -197,6 +202,8 @@ function App() {
       tg.setBackgroundColor('#F8F8F8');
       if (tg.initDataUnsafe?.user) {
         setTelegramUser(tg.initDataUnsafe.user);
+        // Add user to leaderboard if not exists
+        addUserToLeaderboard(tg.initDataUnsafe.user);
       }
     }
   }, []);
@@ -215,12 +222,65 @@ function App() {
     return () => clearInterval(interval);
   }, []);
 
-  // Award coins when audio plays for 30 seconds
+  // Track listening time and award coins
   useEffect(() => {
-    if (isPlaying && currentTime > 0 && Math.floor(currentTime) % 30 === 0 && Math.floor(currentTime) !== 0) {
-      setUserCoins(prev => prev + 5);
+    let interval;
+    if (isPlaying) {
+      interval = setInterval(() => {
+        setListeningTime(prev => {
+          const newTime = prev + 1;
+          // Award 5 coins every 30 seconds
+          if (newTime % 30 === 0) {
+            setUserCoins(prevCoins => prevCoins + 5);
+            updateUserInLeaderboard(5);
+          }
+          return newTime;
+        });
+      }, 1000);
     }
-  }, [currentTime, isPlaying]);
+    return () => clearInterval(interval);
+  }, [isPlaying]);
+
+  const addUserToLeaderboard = (user) => {
+    setLeaderboard(prev => {
+      const existingUser = prev.find(u => u.id === user.id);
+      if (!existingUser) {
+        const newUser = {
+          id: user.id,
+          name: `${user.first_name} ${user.last_name || ''}`.trim(),
+          username: user.username,
+          coins: 0,
+          rank: 0
+        };
+        return [...prev, newUser];
+      }
+      return prev;
+    });
+  };
+
+  const updateUserInLeaderboard = (coinsToAdd) => {
+    if (!telegramUser) return;
+    
+    setLeaderboard(prev => {
+      const updated = prev.map(user => {
+        if (user.id === telegramUser.id) {
+          return { ...user, coins: user.coins + coinsToAdd };
+        }
+        return user;
+      });
+      
+      // Sort by coins and update ranks
+      const sorted = updated.sort((a, b) => b.coins - a.coins);
+      return sorted.map((user, index) => ({
+        ...user,
+        rank: index + 1
+      }));
+    });
+
+    // Update current user's rank
+    const myPosition = leaderboard.findIndex(u => u.id === telegramUser.id) + 1;
+    setUserRank(myPosition || 0);
+  };
 
   const handlePlay = (episode) => {
     setCurrentEpisode(episode);
@@ -360,7 +420,6 @@ function App() {
   });
 
   const favoriteEpisodes = episodes.filter(ep => favorites.includes(ep.title));
-
   const displayedEpisodes = showAllEpisodes ? filteredEpisodes : filteredEpisodes.slice(0, 5);
 
   // FULL SCREEN PLAYER
@@ -375,7 +434,6 @@ function App() {
           <button 
             className="icon-btn" 
             onClick={() => toggleFavorite(currentEpisode)}
-            style={{ color: isFavorite(currentEpisode) ? '#FF4458' : 'var(--text-grey)' }}
           >
             <Icons.Heart filled={isFavorite(currentEpisode)} />
           </button>
@@ -632,6 +690,8 @@ function App() {
 
   // PROFILE TAB
   if (activeTab === 'profile') {
+    const sortedLeaderboard = [...leaderboard].sort((a, b) => b.coins - a.coins).slice(0, 10);
+    
     return (
       <div className="app-container">
         <div className="profile-header">
@@ -664,18 +724,18 @@ function App() {
 
         <div className="profile-stats-3col">
           <div className="stat-card">
-            <Icons.Heart filled={true} />
+            <div className="stat-icon">💜</div>
             <div className="stat-number">{favoriteEpisodes.length}</div>
             <div className="stat-label">Favorites</div>
           </div>
           <div className="stat-card">
-            <Icons.Coin />
+            <div className="stat-icon">🪙</div>
             <div className="stat-number">{userCoins}</div>
             <div className="stat-label">Coins</div>
           </div>
           <div className="stat-card">
-            <Icons.Trophy />
-            <div className="stat-number">#{userRank}</div>
+            <div className="stat-icon">🏆</div>
+            <div className="stat-number">#{userRank || 0}</div>
             <div className="stat-label">Rank</div>
           </div>
         </div>
@@ -686,17 +746,27 @@ function App() {
         </div>
 
         <div className="leaderboard">
-          {MOCK_LEADERBOARD.map((user) => (
-            <div key={user.rank} className="leaderboard-item">
-              <div className="leaderboard-rank">#{user.rank}</div>
-              <div className="leaderboard-avatar">{user.avatar}</div>
-              <div className="leaderboard-info">
-                <div className="leaderboard-name">{user.name}</div>
-                <div className="leaderboard-coins">{user.coins} coins</div>
+          {sortedLeaderboard.length > 0 ? (
+            sortedLeaderboard.map((user, index) => (
+              <div key={user.id} className="leaderboard-item">
+                <div className="leaderboard-rank">#{index + 1}</div>
+                <div className="leaderboard-avatar">
+                  {index === 0 ? '🏆' : index === 1 ? '🥈' : index === 2 ? '🥉' : '👤'}
+                </div>
+                <div className="leaderboard-info">
+                  <div className="leaderboard-name">{user.name}</div>
+                  <div className="leaderboard-coins">{user.coins} coins</div>
+                </div>
+                {index <= 2 && <div className="leaderboard-badge">🎖️</div>}
               </div>
-              {user.rank <= 3 && <div className="leaderboard-badge">🎖️</div>}
+            ))
+          ) : (
+            <div className="empty-state">
+              <div className="empty-icon">🏆</div>
+              <h3>No ranking yet</h3>
+              <p>Start listening to earn coins and rank up!</p>
             </div>
-          ))}
+          )}
         </div>
 
         <div className="bottom-nav">
@@ -854,7 +924,7 @@ function App() {
           </div>
         ))}
         {displayedEpisodes.length === 0 && episodes.length === 0 && (
-          <p style={{textAlign:'center', color:'#999'}}>Loading awesome episodes...</p>
+          <p style={{textAlign:'center', color:'#999', padding: '40px 20px'}}>Loading awesome episodes...</p>
         )}
       </div>
 
