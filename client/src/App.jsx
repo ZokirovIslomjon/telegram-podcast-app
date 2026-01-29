@@ -34,40 +34,60 @@ const Icons = {
     </svg>
   ),
   Play: () => (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
       <polygon points="5 3 19 12 5 21 5 3"/>
     </svg>
   ),
   Pause: () => (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
       <rect x="6" y="4" width="4" height="16"/>
       <rect x="14" y="4" width="4" height="16"/>
     </svg>
   ),
   Heart: ({ filled }) => (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill={filled ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2">
+    <svg width="28" height="28" viewBox="0 0 24 24" fill={filled ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2">
       <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
     </svg>
   ),
   BackArrow: () => (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
       <path d="M19 12H5M12 19l-7-7 7-7"/>
     </svg>
   ),
-  SkipBack: () => (
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <polygon points="19 20 9 12 19 4 19 20" fill="currentColor"/>
-      <line x1="5" y1="19" x2="5" y2="5"/>
+  Close: () => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <line x1="18" y1="6" x2="6" y2="18"/>
+      <line x1="6" y1="6" x2="18" y2="18"/>
     </svg>
   ),
-  SkipForward: () => (
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <polygon points="5 4 15 12 5 20 5 4" fill="currentColor"/>
-      <line x1="19" y1="5" x2="19" y2="19"/>
+  SkipNext: () => (
+    <svg width="36" height="36" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1">
+      <polygon points="5 4 15 12 5 20 5 4"/>
+      <line x1="19" y1="5" x2="19" y2="19" strokeWidth="2"/>
+    </svg>
+  ),
+  SkipPrevious: () => (
+    <svg width="36" height="36" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1">
+      <polygon points="19 20 9 12 19 4 19 20"/>
+      <line x1="5" y1="19" x2="5" y2="5" strokeWidth="2"/>
+    </svg>
+  ),
+  Forward10: () => (
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M15 3h6v6M9 21H3v-6"/>
+      <path d="M21 3l-7 7M3 21l7-7"/>
+      <text x="10" y="15" fontSize="8" fill="currentColor" fontWeight="bold">10</text>
+    </svg>
+  ),
+  Backward10: () => (
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M9 3H3v6M15 21h6v-6"/>
+      <path d="M3 3l7 7M21 21l-7-7"/>
+      <text x="10" y="15" fontSize="8" fill="currentColor" fontWeight="bold">10</text>
     </svg>
   ),
   Shuffle: () => (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <polyline points="16 3 21 3 21 8"/>
       <line x1="4" y1="20" x2="21" y2="3"/>
       <polyline points="21 16 21 21 16 21"/>
@@ -76,20 +96,42 @@ const Icons = {
     </svg>
   ),
   Repeat: () => (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <polyline points="17 1 21 5 17 9"/>
       <path d="M3 11V9a4 4 0 0 1 4-4h14"/>
       <polyline points="7 23 3 19 7 15"/>
       <path d="M21 13v2a4 4 0 0 1-4 4H3"/>
     </svg>
+  ),
+  Camera: () => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+      <circle cx="12" cy="13" r="4"/>
+    </svg>
+  ),
+  Coin: () => (
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <circle cx="12" cy="12" r="10" fill="#FFD700" stroke="#FFA500"/>
+      <text x="12" y="16" fontSize="12" fill="#FFA500" fontWeight="bold" textAnchor="middle">$</text>
+    </svg>
+  ),
+  Trophy: () => (
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/>
+      <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/>
+      <path d="M4 22h16"/>
+      <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/>
+      <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/>
+      <path d="M18 2H6v7a6 6 0 0 0 12 0V2z" fill="#FFD700"/>
+    </svg>
   )
 };
 
-// Categories
+// Categories - Replaced Fashion with Education
 const CATEGORIES = [
   { name: "Gaming", icon: "🎮" },
   { name: "Arts", icon: "🎨" },
-  { name: "Fashion", icon: "👠" },
+  { name: "Education", icon: "📚" },
   { name: "Travel", icon: "✈️" },
   { name: "Tech", icon: "💻" },
   { name: "News", icon: "📰" },
@@ -97,22 +139,31 @@ const CATEGORIES = [
   { name: "Music", icon: "🎵" }
 ];
 
-// Banners - Replace image URLs with your own
+// Banners
 const BANNERS = [
   {
     title: "Listen Favourite",
     subtitle: "Podcast",
     description: "Enjoy premium sound",
-    image: "https://images.unsplash.com/photo-1478737270239-2f02b77fc618?w=400&h=200&fit=crop",
+    image: "https://images.unsplash.com/photo-1478737270239-2f02b77fc618?w=800&h=400&fit=crop",
     gradient: "linear-gradient(135deg, rgba(139, 122, 240, 0.9) 0%, rgba(108, 93, 211, 0.9) 100%)"
   },
   {
     title: "Discover New",
     subtitle: "Episodes",
     description: "Trending now",
-    image: "https://images.unsplash.com/photo-1590602847861-f357a9332bbc?w=400&h=200&fit=crop",
+    image: "https://images.unsplash.com/photo-1590602847861-f357a9332bbc?w=800&h=400&fit=crop",
     gradient: "linear-gradient(135deg, rgba(255, 107, 157, 0.9) 0%, rgba(196, 69, 105, 0.9) 100%)"
   }
+];
+
+// Mock leaderboard data
+const MOCK_LEADERBOARD = [
+  { rank: 1, name: "Alex Johnson", coins: 2450, avatar: "🏆" },
+  { rank: 2, name: "Maria Garcia", coins: 2180, avatar: "🥈" },
+  { rank: 3, name: "Chen Wei", coins: 1950, avatar: "🥉" },
+  { rank: 4, name: "Sarah Miller", coins: 1720, avatar: "👤" },
+  { rank: 5, name: "Ahmed Hassan", coins: 1590, avatar: "👤" },
 ];
 
 function App() {
@@ -129,7 +180,12 @@ function App() {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [telegramUser, setTelegramUser] = useState(null);
+  const [showAllEpisodes, setShowAllEpisodes] = useState(false);
+  const [profileImage, setProfileImage] = useState(null);
+  const [userCoins, setUserCoins] = useState(150);
+  const [userRank, setUserRank] = useState(8);
   const audioRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     if (window.Telegram?.WebApp) {
@@ -159,6 +215,13 @@ function App() {
     return () => clearInterval(interval);
   }, []);
 
+  // Award coins when audio plays for 30 seconds
+  useEffect(() => {
+    if (isPlaying && currentTime > 0 && Math.floor(currentTime) % 30 === 0 && Math.floor(currentTime) !== 0) {
+      setUserCoins(prev => prev + 5);
+    }
+  }, [currentTime, isPlaying]);
+
   const handlePlay = (episode) => {
     setCurrentEpisode(episode);
     setLastPlayedEpisode(episode);
@@ -185,6 +248,20 @@ function App() {
   const skipBackward = () => {
     if (audioRef.current) {
       audioRef.current.currentTime = Math.max(audioRef.current.currentTime - 10, 0);
+    }
+  };
+
+  const playNext = () => {
+    const currentIndex = episodes.findIndex(ep => ep.title === lastPlayedEpisode?.title);
+    if (currentIndex < episodes.length - 1) {
+      handlePlay(episodes[currentIndex + 1]);
+    }
+  };
+
+  const playPrevious = () => {
+    const currentIndex = episodes.findIndex(ep => ep.title === lastPlayedEpisode?.title);
+    if (currentIndex > 0) {
+      handlePlay(episodes[currentIndex - 1]);
     }
   };
 
@@ -235,9 +312,17 @@ function App() {
     setCurrentEpisode(null);
   };
 
+  const closeMiniPlayer = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+    }
+    setIsPlaying(false);
+    setLastPlayedEpisode(null);
+  };
+
   const handleCategoryClick = (category) => {
     setSelectedCategory(category.name);
-    setActiveTab('home');
+    setActiveTab('discover');
   };
 
   const handleBannerPlayNow = () => {
@@ -251,8 +336,20 @@ function App() {
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);
+    setShowAllEpisodes(false);
     if (tab === 'home') {
       setSelectedCategory(null);
+    }
+  };
+
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProfileImage(reader.result);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -264,6 +361,9 @@ function App() {
 
   const favoriteEpisodes = episodes.filter(ep => favorites.includes(ep.title));
 
+  const displayedEpisodes = showAllEpisodes ? filteredEpisodes : filteredEpisodes.slice(0, 5);
+
+  // FULL SCREEN PLAYER
   if (currentEpisode) {
     return (
       <div className="player-overlay">
@@ -300,20 +400,24 @@ function App() {
           </div>
         </div>
 
-        <div className="controls">
+        <div className="controls-large">
           <button className="control-btn-small">
             <Icons.Shuffle />
           </button>
-          <button className="control-btn-skip" onClick={skipBackward}>
-            <Icons.SkipBack />
-            <span className="skip-text">10</span>
+          <button className="control-btn-nav" onClick={playPrevious}>
+            <Icons.SkipPrevious />
           </button>
-          <button className="play-btn-large" onClick={togglePlay}>
+          <button className="control-btn-skip" onClick={skipBackward}>
+            <Icons.Backward10 />
+          </button>
+          <button className="play-btn-extra-large" onClick={togglePlay}>
             {isPlaying ? <Icons.Pause /> : <Icons.Play />}
           </button>
           <button className="control-btn-skip" onClick={skipForward}>
-            <Icons.SkipForward />
-            <span className="skip-text">10</span>
+            <Icons.Forward10 />
+          </button>
+          <button className="control-btn-nav" onClick={playNext}>
+            <Icons.SkipNext />
           </button>
           <button className="control-btn-small">
             <Icons.Repeat />
@@ -332,31 +436,70 @@ function App() {
     )
   }
 
+  // DISCOVER TAB
   if (activeTab === 'discover') {
     return (
       <div className="app-container">
         <div className="header">
-          <div className="header-title">Discover</div>
+          <div className="header-title">
+            {selectedCategory ? selectedCategory : 'Discover'}
+          </div>
+          {selectedCategory && (
+            <button className="clear-filter-btn" onClick={() => setSelectedCategory(null)}>
+              Clear Filter
+            </button>
+          )}
         </div>
         
-        <div className="section-title" style={{marginTop: '20px'}}>
-          <span>Browse Categories</span>
-        </div>
-        <div className="categories-grid">
-          {CATEGORIES.map(cat => (
-            <div 
-              key={cat.name} 
-              className="category-card" 
-              onClick={() => {
-                setSelectedCategory(cat.name);
-                setActiveTab('home');
-              }}
-            >
-              <div className="category-icon-large">{cat.icon}</div>
-              <span className="category-name">{cat.name}</span>
+        {!selectedCategory && (
+          <>
+            <div className="section-title" style={{marginTop: '20px'}}>
+              <span>Browse Categories</span>
             </div>
-          ))}
-        </div>
+            <div className="categories-grid-4col">
+              {CATEGORIES.map(cat => (
+                <div 
+                  key={cat.name} 
+                  className="category-card" 
+                  onClick={() => setSelectedCategory(cat.name)}
+                >
+                  <div className="category-icon-large">{cat.icon}</div>
+                  <span className="category-name">{cat.name}</span>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+
+        {selectedCategory && (
+          <>
+            <div className="section-title" style={{marginTop: '20px'}}>
+              <span>{selectedCategory} Podcasts</span>
+              <span className="see-all">{filteredEpisodes.length} episodes</span>
+            </div>
+            <div className="episode-list">
+              {filteredEpisodes.map((ep, index) => (
+                <div key={index} className="episode-card" onClick={() => handlePlay(ep)}>
+                  <img src={ep.cover} alt="Cover" className="card-img" />
+                  <div className="card-info">
+                    <h3 className="card-title">{ep.title}</h3>
+                    <p className="card-sub">Episode {index + 1} • 35 mins</p>
+                  </div>
+                  <div className="play-icon-small">
+                    <Icons.Play />
+                  </div>
+                </div>
+              ))}
+              {filteredEpisodes.length === 0 && (
+                <div className="empty-state">
+                  <div className="empty-icon">🎙️</div>
+                  <h3>No episodes found</h3>
+                  <p>Try a different category</p>
+                </div>
+              )}
+            </div>
+          </>
+        )}
 
         <div className="bottom-nav">
           <button className="nav-item" onClick={() => handleTabChange('home')}>
@@ -388,6 +531,9 @@ function App() {
               <button className="mini-player-btn" onClick={(e) => { e.stopPropagation(); togglePlay(); }}>
                 {isPlaying ? <Icons.Pause /> : <Icons.Play />}
               </button>
+              <button className="mini-player-close" onClick={(e) => { e.stopPropagation(); closeMiniPlayer(); }}>
+                <Icons.Close />
+              </button>
             </div>
             <audio 
               ref={audioRef} 
@@ -402,6 +548,7 @@ function App() {
     );
   }
 
+  // LIBRARY TAB
   if (activeTab === 'library') {
     return (
       <div className="app-container">
@@ -466,6 +613,9 @@ function App() {
               <button className="mini-player-btn" onClick={(e) => { e.stopPropagation(); togglePlay(); }}>
                 {isPlaying ? <Icons.Pause /> : <Icons.Play />}
               </button>
+              <button className="mini-player-close" onClick={(e) => { e.stopPropagation(); closeMiniPlayer(); }}>
+                <Icons.Close />
+              </button>
             </div>
             <audio 
               ref={audioRef} 
@@ -480,38 +630,73 @@ function App() {
     );
   }
 
+  // PROFILE TAB
   if (activeTab === 'profile') {
     return (
       <div className="app-container">
-        <div className="header">
-          <div className="header-title">Profile</div>
-        </div>
-        
-        <div className="profile-section">
-          <div className="profile-avatar">
-            <Icons.Profile />
+        <div className="profile-header">
+          <div className="profile-avatar-container">
+            {profileImage ? (
+              <img src={profileImage} alt="Profile" className="profile-avatar-img" />
+            ) : (
+              <div className="profile-avatar-placeholder">
+                <Icons.Profile />
+              </div>
+            )}
+            <button className="profile-camera-btn" onClick={() => fileInputRef.current?.click()}>
+              <Icons.Camera />
+            </button>
+            <input 
+              ref={fileInputRef}
+              type="file" 
+              accept="image/*" 
+              style={{display: 'none'}} 
+              onChange={handleImageUpload}
+            />
           </div>
-          <h2 className="profile-name">
+          <h2 className="profile-name-center">
             {telegramUser ? `${telegramUser.first_name} ${telegramUser.last_name || ''}`.trim() : 'Guest User'}
           </h2>
-          <p className="profile-username">
+          <p className="profile-username-center">
             {telegramUser?.username ? `@${telegramUser.username}` : 'Telegram User'}
           </p>
-          
-          <div className="profile-stats">
-            <div className="stat-item">
-              <div className="stat-number">{favoriteEpisodes.length}</div>
-              <div className="stat-label">Favorites</div>
-            </div>
-            <div className="stat-item">
-              <div className="stat-number">{episodes.length}</div>
-              <div className="stat-label">Episodes</div>
-            </div>
-            <div className="stat-item">
-              <div className="stat-number">0</div>
-              <div className="stat-label">Playlists</div>
-            </div>
+        </div>
+
+        <div className="profile-stats-3col">
+          <div className="stat-card">
+            <Icons.Heart filled={true} />
+            <div className="stat-number">{favoriteEpisodes.length}</div>
+            <div className="stat-label">Favorites</div>
           </div>
+          <div className="stat-card">
+            <Icons.Coin />
+            <div className="stat-number">{userCoins}</div>
+            <div className="stat-label">Coins</div>
+          </div>
+          <div className="stat-card">
+            <Icons.Trophy />
+            <div className="stat-number">#{userRank}</div>
+            <div className="stat-label">Rank</div>
+          </div>
+        </div>
+
+        <div className="section-title" style={{marginTop: '30px'}}>
+          <span>Leaderboard</span>
+          <span className="see-all">Top Listeners</span>
+        </div>
+
+        <div className="leaderboard">
+          {MOCK_LEADERBOARD.map((user) => (
+            <div key={user.rank} className="leaderboard-item">
+              <div className="leaderboard-rank">#{user.rank}</div>
+              <div className="leaderboard-avatar">{user.avatar}</div>
+              <div className="leaderboard-info">
+                <div className="leaderboard-name">{user.name}</div>
+                <div className="leaderboard-coins">{user.coins} coins</div>
+              </div>
+              {user.rank <= 3 && <div className="leaderboard-badge">🎖️</div>}
+            </div>
+          ))}
         </div>
 
         <div className="bottom-nav">
@@ -544,6 +729,9 @@ function App() {
               <button className="mini-player-btn" onClick={(e) => { e.stopPropagation(); togglePlay(); }}>
                 {isPlaying ? <Icons.Pause /> : <Icons.Play />}
               </button>
+              <button className="mini-player-close" onClick={(e) => { e.stopPropagation(); closeMiniPlayer(); }}>
+                <Icons.Close />
+              </button>
             </div>
             <audio 
               ref={audioRef} 
@@ -558,6 +746,7 @@ function App() {
     );
   }
 
+  // HOME SCREEN
   return (
     <div className="app-container">
       <div className="header">
@@ -613,7 +802,7 @@ function App() {
 
       <div className="section-title">
         <span>Category</span>
-        <span className="see-all">See All</span>
+        <span className="see-all" onClick={() => setActiveTab('discover')}>See All</span>
       </div>
       <div className="categories-row">
         {CATEGORIES.slice(0, 5).map(cat => (
@@ -645,12 +834,14 @@ function App() {
       </div>
 
       <div className="section-title">
-        <span>{selectedCategory ? `${selectedCategory} Podcasts` : 'Recommended Podcast'}</span>
-        <span className="see-all">See All</span>
+        <span>Recommended Podcast</span>
+        <span className="see-all" onClick={() => setShowAllEpisodes(!showAllEpisodes)}>
+          {showAllEpisodes ? 'Show Less' : 'See All'}
+        </span>
       </div>
 
       <div className="episode-list">
-        {filteredEpisodes.map((ep, index) => (
+        {displayedEpisodes.map((ep, index) => (
           <div key={index} className="episode-card" onClick={() => handlePlay(ep)}>
             <img src={ep.cover} alt="Cover" className="card-img" />
             <div className="card-info">
@@ -662,11 +853,8 @@ function App() {
             </div>
           </div>
         ))}
-        {filteredEpisodes.length === 0 && episodes.length === 0 && (
+        {displayedEpisodes.length === 0 && episodes.length === 0 && (
           <p style={{textAlign:'center', color:'#999'}}>Loading awesome episodes...</p>
-        )}
-        {filteredEpisodes.length === 0 && episodes.length > 0 && (
-          <p style={{textAlign:'center', color:'#999'}}>No episodes found</p>
         )}
       </div>
 
@@ -689,27 +877,29 @@ function App() {
         </button>
       </div>
 
-      {lastPlayedEpisode && !currentEpisode && (
-        <div className="mini-player" onClick={() => setCurrentEpisode(lastPlayedEpisode)}>
-          <img src={lastPlayedEpisode.cover} alt="Cover" className="mini-player-img" />
-          <div className="mini-player-info">
-            <div className="mini-player-title">{lastPlayedEpisode.title}</div>
-            <div className="mini-player-artist">Innovision Radio</div>
+      {lastPlayedEpisode && (
+        <>
+          <div className="mini-player" onClick={() => setCurrentEpisode(lastPlayedEpisode)}>
+            <img src={lastPlayedEpisode.cover} alt="Cover" className="mini-player-img" />
+            <div className="mini-player-info">
+              <div className="mini-player-title">{lastPlayedEpisode.title}</div>
+              <div className="mini-player-artist">Innovision Radio</div>
+            </div>
+            <button className="mini-player-btn" onClick={(e) => { e.stopPropagation(); togglePlay(); }}>
+              {isPlaying ? <Icons.Pause /> : <Icons.Play />}
+            </button>
+            <button className="mini-player-close" onClick={(e) => { e.stopPropagation(); closeMiniPlayer(); }}>
+              <Icons.Close />
+            </button>
           </div>
-          <button className="mini-player-btn" onClick={(e) => { e.stopPropagation(); togglePlay(); }}>
-            {isPlaying ? <Icons.Pause /> : <Icons.Play />}
-          </button>
-        </div>
-      )}
-
-      {lastPlayedEpisode && !currentEpisode && (
-        <audio 
-          ref={audioRef} 
-          src={lastPlayedEpisode.audio}
-          onEnded={() => setIsPlaying(false)}
-          onTimeUpdate={handleTimeUpdate}
-          onLoadedMetadata={handleLoadedMetadata}
-        />
+          <audio 
+            ref={audioRef} 
+            src={lastPlayedEpisode.audio}
+            onEnded={() => setIsPlaying(false)}
+            onTimeUpdate={handleTimeUpdate}
+            onLoadedMetadata={handleLoadedMetadata}
+          />
+        </>
       )}
     </div>
   )
