@@ -223,16 +223,21 @@ function App() {
   }, []);
 
   // Track listening time and award coins
+  // Track listening time and award coins (REAL DATA LOGIC)
   useEffect(() => {
     let interval;
     if (isPlaying) {
       interval = setInterval(() => {
         setListeningTime(prev => {
           const newTime = prev + 1;
-          // Award 5 coins every 30 seconds
-          if (newTime % 30 === 0) {
-            setUserCoins(prevCoins => prevCoins + 5);
-            updateUserInLeaderboard(5);
+          
+          // RULE: 2 Minutes (120 seconds) = 1 Coin
+          if (newTime > 0 && newTime % 120 === 0) {
+            setUserCoins(prevCoins => prevCoins + 1); // Award 1 coin
+            updateUserInLeaderboard(1); // Update rank
+            
+            // Optional: Alert the user they earned a coin
+            // alert("You earned 1 coin for listening!"); 
           }
           return newTime;
         });
