@@ -423,7 +423,8 @@ function App() {
   });
 
   const favoriteEpisodes = episodes.filter(ep => favorites.includes(ep.title));
-  const displayedEpisodes = showAllEpisodes ? filteredEpisodes : filteredEpisodes.slice(0, 5);
+  // Show ALL episodes by default (Unlimited)
+  const displayedEpisodes = filteredEpisodes;
 
   // FULL SCREEN PLAYER
   if (currentEpisode) {
@@ -753,16 +754,15 @@ function App() {
           {sortedLeaderboard.length > 0 ? (
             sortedLeaderboard.map((user, index) => (
               <div key={user.id} className="leaderboard-item">
-                <div className="leaderboard-rank">#{index + 1}</div>
-                <div className="leaderboard-avatar">
-                  {index === 0 ? '🏆' : index === 1 ? '🥈' : index === 2 ? '🥉' : '👤'}
-                </div>
-                <div className="leaderboard-info">
-                  <div className="leaderboard-name">{user.name}</div>
-                  <div className="leaderboard-coins">{user.coins} coins</div>
-                </div>
-                {index <= 2 && <div className="leaderboard-badge">🎖️</div>}
-              </div>
+                   <div className="leaderboard-left">
+                     <div className="leaderboard-rank">#{index + 1}</div>
+                     <div className="leaderboard-avatar">
+                      {index === 0 ? '🏆' : index === 1 ? '🥈' : index === 2 ? '🥉' : '👤'}
+                   </div>
+               <div className="leaderboard-name">{user.name}</div>
+        </div>
+  <div className="leaderboard-coins">{user.coins} coins</div>
+</div>
             ))
           ) : (
             <div className="empty-state">
