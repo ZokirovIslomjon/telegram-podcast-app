@@ -240,3 +240,23 @@ body {
 .nav-text { font-size: 10px; font-weight: 500; }
 .empty-state { text-align: center; padding: 40px 20px; color: var(--text-grey); }
 .empty-icon { font-size: 48px; margin-bottom: 10px; opacity: 0.5; }
+
+/* LOAD MORE BUTTON */
+.load-more-btn {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  margin: 20px 0;
+  background: var(--white);
+  color: var(--primary);
+  border: 1px solid var(--primary);
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.load-more-btn:active {
+  background: var(--primary);
+  color: white;
+}
