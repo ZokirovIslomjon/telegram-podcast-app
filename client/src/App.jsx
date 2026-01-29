@@ -155,12 +155,15 @@ function App() {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [telegramUser, setTelegramUser] = useState(null);
-  const [showAllEpisodes, setShowAllEpisodes] = useState(false);
   const [profileImage, setProfileImage] = useState(null);
   const [userCoins, setUserCoins] = useState(0);
   const [userRank, setUserRank] = useState(0);
   const [leaderboard, setLeaderboard] = useState([]);
   const [listeningTime, setListeningTime] = useState(0);
+  
+  // NEW: PAGINATION STATE
+  const [visibleCount, setVisibleCount] = useState(15);
+  
   const audioRef = useRef(null);
   const fileInputRef = useRef(null);
 
@@ -174,7 +177,6 @@ function App() {
       setUserCoins(data.userCoins || 0);
       setUserRank(data.userRank || 0);
       setListeningTime(data.listeningTime || 0);
-      // We don't load local leaderboard anymore, we fetch from server
     }
   }, []);
 
@@ -228,10 +230,15 @@ function App() {
        .catch(err => console.error("Leaderboard fetch error:", err));
   }, [activeTab, telegramUser]); 
 
+  // FETCH EPISODES & SORT BY DATE
   useEffect(() => {
     fetch('https://telegram-podcast-app.onrender.com/api/episodes')
       .then(res => res.json())
-      .then(data => setEpisodes(data))
+      .then(data => {
+        // SORT: Newest First
+        const sortedData = data.sort((a, b) => new Date(b.date) - new Date(a.date));
+        setEpisodes(sortedData);
+      })
       .catch(err => console.error(err));
   }, []);
 
@@ -242,18 +249,17 @@ function App() {
     return () => clearInterval(interval);
   }, []);
 
-  // Track listening time and award coins (REAL DATA LOGIC)
+  // Track listening time and award coins
   useEffect(() => {
     let interval;
     if (isPlaying) {
       interval = setInterval(() => {
         setListeningTime(prev => {
           const newTime = prev + 1;
-          
           // RULE: 2 Minutes (120 seconds) = 1 Coin
           if (newTime > 0 && newTime % 120 === 0) {
-            setUserCoins(prevCoins => prevCoins + 1); // Award 1 coin
-            updateUserInLeaderboard(1); // Update rank
+            setUserCoins(prevCoins => prevCoins + 1);
+            updateUserInLeaderboard(1);
           }
           return newTime;
         });
@@ -263,26 +269,29 @@ function App() {
   }, [isPlaying]);
 
   const updateUserInLeaderboard = (coinsToAdd) => {
-    // 1. Update Local State (Instant visual feedback)
     const newTotal = userCoins + coinsToAdd;
-    
-    if (telegramUser) {
-       // 2. Send to Server (The Cloud Database)
-       fetch('https://telegram-podcast-app.onrender.com/api/user/sync', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-             telegramId: telegramUser.id.toString(),
-             name: `${telegramUser.first_name} ${telegramUser.last_name || ''}`.trim(),
-             username: telegramUser.username,
-             coins: newTotal
-          })
-       }).then(res => res.json())
-         .then(data => {
-            console.log("Synced with Cloud:", data);
-         })
-         .catch(err => console.error("Sync failed:", err));
+    let userId = telegramUser?.id?.toString();
+    let userName = telegramUser ? `${telegramUser.first_name}` : "Guest User";
+    let userUsername = telegramUser?.username || "guest";
+
+    if (!userId) {
+       userId = localStorage.getItem('guest_id') || `guest_${Math.floor(Math.random() * 10000)}`;
+       localStorage.setItem('guest_id', userId);
+       userName = "Guest Tester " + userId.slice(-4);
     }
+
+    fetch('https://telegram-podcast-app.onrender.com/api/user/sync', {
+       method: 'POST',
+       headers: { 'Content-Type': 'application/json' },
+       body: JSON.stringify({
+          telegramId: userId,
+          name: userName,
+          username: userUsername,
+          coins: newTotal
+       })
+    }).then(res => res.json())
+      .then(data => console.log("✅ Leaderboard Updated:", data))
+      .catch(err => console.error("❌ Sync failed:", err));
   };
 
   const handlePlay = (episode) => {
@@ -293,51 +302,36 @@ function App() {
 
   const togglePlay = () => {
     if (audioRef.current) {
-      if (isPlaying) {
-        audioRef.current.pause();
-      } else {
-        audioRef.current.play();
-      }
+      if (isPlaying) audioRef.current.pause();
+      else audioRef.current.play();
       setIsPlaying(!isPlaying);
     }
   };
 
   const skipForward = () => {
-    if (audioRef.current) {
-      audioRef.current.currentTime = Math.min(audioRef.current.currentTime + 10, duration);
-    }
+    if (audioRef.current) audioRef.current.currentTime = Math.min(audioRef.current.currentTime + 10, duration);
   };
 
   const skipBackward = () => {
-    if (audioRef.current) {
-      audioRef.current.currentTime = Math.max(audioRef.current.currentTime - 10, 0);
-    }
+    if (audioRef.current) audioRef.current.currentTime = Math.max(audioRef.current.currentTime - 10, 0);
   };
 
   const playNext = () => {
     const currentIndex = episodes.findIndex(ep => ep.title === lastPlayedEpisode?.title);
-    if (currentIndex < episodes.length - 1) {
-      handlePlay(episodes[currentIndex + 1]);
-    }
+    if (currentIndex < episodes.length - 1) handlePlay(episodes[currentIndex + 1]);
   };
 
   const playPrevious = () => {
     const currentIndex = episodes.findIndex(ep => ep.title === lastPlayedEpisode?.title);
-    if (currentIndex > 0) {
-      handlePlay(episodes[currentIndex - 1]);
-    }
+    if (currentIndex > 0) handlePlay(episodes[currentIndex - 1]);
   };
 
   const handleTimeUpdate = () => {
-    if (audioRef.current) {
-      setCurrentTime(audioRef.current.currentTime);
-    }
+    if (audioRef.current) setCurrentTime(audioRef.current.currentTime);
   };
 
   const handleLoadedMetadata = () => {
-    if (audioRef.current) {
-      setDuration(audioRef.current.duration);
-    }
+    if (audioRef.current) setDuration(audioRef.current.duration);
   };
 
   const handleSeek = (e) => {
@@ -358,27 +352,26 @@ function App() {
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
+  // Date Formatter
+  const formatDate = (dateString) => {
+    const options = { year: 'numeric', month: 'short', day: 'numeric' };
+    return new Date(dateString).toLocaleDateString(undefined, options);
+  };
+
   const toggleFavorite = (episode) => {
     const episodeId = episode.title;
-    if (favorites.includes(episodeId)) {
-      setFavorites(favorites.filter(id => id !== episodeId));
-    } else {
-      setFavorites([...favorites, episodeId]);
-    }
+    if (favorites.includes(episodeId)) setFavorites(favorites.filter(id => id !== episodeId));
+    else setFavorites([...favorites, episodeId]);
   };
 
   const isFavorite = (episode) => {
     return favorites.includes(episode.title);
   };
 
-  const closePlayer = () => {
-    setCurrentEpisode(null);
-  };
+  const closePlayer = () => setCurrentEpisode(null);
 
   const closeMiniPlayer = () => {
-    if (audioRef.current) {
-      audioRef.current.pause();
-    }
+    if (audioRef.current) audioRef.current.pause();
     setIsPlaying(false);
     setLastPlayedEpisode(null);
   };
@@ -399,23 +392,19 @@ function App() {
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);
-    setShowAllEpisodes(false);
-    if (tab === 'home') {
-      setSelectedCategory(null);
-    }
+    if (tab === 'home') setSelectedCategory(null);
   };
 
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setProfileImage(reader.result);
-      };
+      reader.onloadend = () => setProfileImage(reader.result);
       reader.readAsDataURL(file);
     }
   };
 
+  // FILTERING LOGIC
   const filteredEpisodes = episodes.filter(ep => {
     const matchesCategory = !selectedCategory || ep.title.toLowerCase().includes(selectedCategory.toLowerCase());
     const matchesSearch = !searchQuery || ep.title.toLowerCase().includes(searchQuery.toLowerCase());
@@ -423,8 +412,14 @@ function App() {
   });
 
   const favoriteEpisodes = episodes.filter(ep => favorites.includes(ep.title));
-  // Show ALL episodes by default (Unlimited)
-  const displayedEpisodes = filteredEpisodes;
+  
+  // PAGINATION LOGIC: Show only 'visibleCount' items
+  const displayedEpisodes = filteredEpisodes.slice(0, visibleCount);
+
+  // Load More Function
+  const handleLoadMore = () => {
+    setVisibleCount(prev => prev + 15);
+  };
 
   // FULL SCREEN PLAYER
   if (currentEpisode) {
@@ -435,10 +430,7 @@ function App() {
             <Icons.BackArrow />
           </button>
           <span className="now-playing-text">Now Playing</span>
-          <button 
-            className="icon-btn" 
-            onClick={() => toggleFavorite(currentEpisode)}
-          >
+          <button className="icon-btn" onClick={() => toggleFavorite(currentEpisode)}>
             <Icons.Heart filled={isFavorite(currentEpisode)} />
           </button>
         </div>
@@ -448,6 +440,7 @@ function App() {
         <div className="track-info">
           <h2 className="track-title">{currentEpisode.title}</h2>
           <p className="track-artist">Innovision Radio</p>
+          <p style={{fontSize:'12px', color:'#999', marginTop:'4px'}}>{formatDate(currentEpisode.date)}</p>
         </div>
 
         <div className="progress-container">
@@ -463,27 +456,15 @@ function App() {
         </div>
 
         <div className="controls-large">
-          <button className="control-btn-small">
-            <Icons.Shuffle />
-          </button>
-          <button className="control-btn-nav" onClick={playPrevious}>
-            <Icons.SkipPrevious />
-          </button>
-          <button className="control-btn-skip" onClick={skipBackward}>
-            <Icons.Backward10 />
-          </button>
+          <button className="control-btn-small"><Icons.Shuffle /></button>
+          <button className="control-btn-nav" onClick={playPrevious}><Icons.SkipPrevious /></button>
+          <button className="control-btn-skip" onClick={skipBackward}><Icons.Backward10 /></button>
           <button className="play-btn-extra-large" onClick={togglePlay}>
             {isPlaying ? <Icons.Pause /> : <Icons.Play />}
           </button>
-          <button className="control-btn-skip" onClick={skipForward}>
-            <Icons.Forward10 />
-          </button>
-          <button className="control-btn-nav" onClick={playNext}>
-            <Icons.SkipNext />
-          </button>
-          <button className="control-btn-small">
-            <Icons.Repeat />
-          </button>
+          <button className="control-btn-skip" onClick={skipForward}><Icons.Forward10 /></button>
+          <button className="control-btn-nav" onClick={playNext}><Icons.SkipNext /></button>
+          <button className="control-btn-small"><Icons.Repeat /></button>
         </div>
 
         <audio 
@@ -503,28 +484,18 @@ function App() {
     return (
       <div className="app-container">
         <div className="header">
-          <div className="header-title">
-            {selectedCategory ? selectedCategory : 'Discover'}
-          </div>
+          <div className="header-title">{selectedCategory ? selectedCategory : 'Discover'}</div>
           {selectedCategory && (
-            <button className="clear-filter-btn" onClick={() => setSelectedCategory(null)}>
-              Clear Filter
-            </button>
+            <button className="clear-filter-btn" onClick={() => setSelectedCategory(null)}>Clear Filter</button>
           )}
         </div>
         
         {!selectedCategory && (
           <>
-            <div className="section-title" style={{marginTop: '20px'}}>
-              <span>Browse Categories</span>
-            </div>
+            <div className="section-title" style={{marginTop: '20px'}}><span>Browse Categories</span></div>
             <div className="categories-grid-4col">
               {CATEGORIES.map(cat => (
-                <div 
-                  key={cat.name} 
-                  className="category-card" 
-                  onClick={() => setSelectedCategory(cat.name)}
-                >
+                <div key={cat.name} className="category-card" onClick={() => setSelectedCategory(cat.name)}>
                   <div className="category-icon-large">{cat.icon}</div>
                   <span className="category-name">{cat.name}</span>
                 </div>
@@ -540,71 +511,51 @@ function App() {
               <span className="see-all">{filteredEpisodes.length} episodes</span>
             </div>
             <div className="episode-list">
-              {filteredEpisodes.map((ep, index) => (
+              {displayedEpisodes.map((ep, index) => (
                 <div key={index} className="episode-card" onClick={() => handlePlay(ep)}>
                   <img src={ep.cover} alt="Cover" className="card-img" />
                   <div className="card-info">
                     <h3 className="card-title">{ep.title}</h3>
-                    <p className="card-sub">Episode {index + 1} • 35 mins</p>
+                    <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+                       <p className="card-sub">{formatDate(ep.date)}</p>
+                       <p className="card-sub">35m</p>
+                    </div>
                   </div>
-                  <div className="play-icon-small">
-                    <Icons.Play />
-                  </div>
+                  <div className="play-icon-small"><Icons.Play /></div>
                 </div>
               ))}
-              {filteredEpisodes.length === 0 && (
-                <div className="empty-state">
-                  <div className="empty-icon">🎙️</div>
-                  <h3>No episodes found</h3>
-                  <p>Try a different category</p>
-                </div>
+              
+              {/* Load More Button */}
+              {visibleCount < filteredEpisodes.length && (
+                <button className="load-more-btn" onClick={handleLoadMore}>
+                  Load More Episodes
+                </button>
               )}
             </div>
           </>
         )}
 
         <div className="bottom-nav">
-          <button className="nav-item" onClick={() => handleTabChange('home')}>
-            <Icons.Home />
-            <span className="nav-text">Home</span>
-          </button>
-          <button className="nav-item active">
-            <Icons.Discover />
-            <span className="nav-text">Discover</span>
-          </button>
-          <button className="nav-item" onClick={() => handleTabChange('library')}>
-            <Icons.Library />
-            <span className="nav-text">Library</span>
-          </button>
-          <button className="nav-item" onClick={() => handleTabChange('profile')}>
-            <Icons.Profile />
-            <span className="nav-text">Profile</span>
-          </button>
+          <button className="nav-item" onClick={() => handleTabChange('home')}><Icons.Home /><span className="nav-text">Home</span></button>
+          <button className="nav-item active"><Icons.Discover /><span className="nav-text">Discover</span></button>
+          <button className="nav-item" onClick={() => handleTabChange('library')}><Icons.Library /><span className="nav-text">Library</span></button>
+          <button className="nav-item" onClick={() => handleTabChange('profile')}><Icons.Profile /><span className="nav-text">Profile</span></button>
         </div>
 
         {lastPlayedEpisode && (
-          <>
-            <div className="mini-player" onClick={() => setCurrentEpisode(lastPlayedEpisode)}>
-              <img src={lastPlayedEpisode.cover} alt="Cover" className="mini-player-img" />
-              <div className="mini-player-info">
-                <div className="mini-player-title">{lastPlayedEpisode.title}</div>
-                <div className="mini-player-artist">Innovision Radio</div>
-              </div>
-              <button className="mini-player-btn" onClick={(e) => { e.stopPropagation(); togglePlay(); }}>
-                {isPlaying ? <Icons.Pause /> : <Icons.Play />}
-              </button>
-              <button className="mini-player-close" onClick={(e) => { e.stopPropagation(); closeMiniPlayer(); }}>
-                <Icons.Close />
-              </button>
+          <div className="mini-player" onClick={() => setCurrentEpisode(lastPlayedEpisode)}>
+            <img src={lastPlayedEpisode.cover} alt="Cover" className="mini-player-img" />
+            <div className="mini-player-info">
+              <div className="mini-player-title">{lastPlayedEpisode.title}</div>
+              <div className="mini-player-artist">Innovision Radio</div>
             </div>
-            <audio 
-              ref={audioRef} 
-              src={lastPlayedEpisode.audio}
-              onEnded={() => setIsPlaying(false)}
-              onTimeUpdate={handleTimeUpdate}
-              onLoadedMetadata={handleLoadedMetadata}
-            />
-          </>
+            <button className="mini-player-btn" onClick={(e) => { e.stopPropagation(); togglePlay(); }}>
+              {isPlaying ? <Icons.Pause /> : <Icons.Play />}
+            </button>
+            <button className="mini-player-close" onClick={(e) => { e.stopPropagation(); closeMiniPlayer(); }}>
+              <Icons.Close />
+            </button>
+          </div>
         )}
       </div>
     );
@@ -614,9 +565,7 @@ function App() {
   if (activeTab === 'library') {
     return (
       <div className="app-container">
-        <div className="header">
-          <div className="header-title">Library</div>
-        </div>
+        <div className="header"><div className="header-title">Library</div></div>
         
         <div className="section-title" style={{marginTop: '20px'}}>
           <span>Favorite Podcasts</span>
@@ -629,11 +578,9 @@ function App() {
               <img src={ep.cover} alt="Cover" className="card-img" />
               <div className="card-info">
                 <h3 className="card-title">{ep.title}</h3>
-                <p className="card-sub">Episode {index + 1} • 35 mins</p>
+                <p className="card-sub">{formatDate(ep.date)}</p>
               </div>
-              <div className="play-icon-small">
-                <Icons.Play />
-              </div>
+              <div className="play-icon-small"><Icons.Play /></div>
             </div>
           ))}
           {favoriteEpisodes.length === 0 && (
@@ -646,85 +593,44 @@ function App() {
         </div>
 
         <div className="bottom-nav">
-          <button className="nav-item" onClick={() => handleTabChange('home')}>
-            <Icons.Home />
-            <span className="nav-text">Home</span>
-          </button>
-          <button className="nav-item" onClick={() => handleTabChange('discover')}>
-            <Icons.Discover />
-            <span className="nav-text">Discover</span>
-          </button>
-          <button className="nav-item active">
-            <Icons.Library />
-            <span className="nav-text">Library</span>
-          </button>
-          <button className="nav-item" onClick={() => handleTabChange('profile')}>
-            <Icons.Profile />
-            <span className="nav-text">Profile</span>
-          </button>
+          <button className="nav-item" onClick={() => handleTabChange('home')}><Icons.Home /><span className="nav-text">Home</span></button>
+          <button className="nav-item" onClick={() => handleTabChange('discover')}><Icons.Discover /><span className="nav-text">Discover</span></button>
+          <button className="nav-item active"><Icons.Library /><span className="nav-text">Library</span></button>
+          <button className="nav-item" onClick={() => handleTabChange('profile')}><Icons.Profile /><span className="nav-text">Profile</span></button>
         </div>
 
         {lastPlayedEpisode && (
-          <>
-            <div className="mini-player" onClick={() => setCurrentEpisode(lastPlayedEpisode)}>
-              <img src={lastPlayedEpisode.cover} alt="Cover" className="mini-player-img" />
-              <div className="mini-player-info">
-                <div className="mini-player-title">{lastPlayedEpisode.title}</div>
-                <div className="mini-player-artist">Innovision Radio</div>
-              </div>
-              <button className="mini-player-btn" onClick={(e) => { e.stopPropagation(); togglePlay(); }}>
-                {isPlaying ? <Icons.Pause /> : <Icons.Play />}
-              </button>
-              <button className="mini-player-close" onClick={(e) => { e.stopPropagation(); closeMiniPlayer(); }}>
-                <Icons.Close />
-              </button>
+          <div className="mini-player" onClick={() => setCurrentEpisode(lastPlayedEpisode)}>
+            <img src={lastPlayedEpisode.cover} alt="Cover" className="mini-player-img" />
+            <div className="mini-player-info">
+              <div className="mini-player-title">{lastPlayedEpisode.title}</div>
+              <div className="mini-player-artist">Innovision Radio</div>
             </div>
-            <audio 
-              ref={audioRef} 
-              src={lastPlayedEpisode.audio}
-              onEnded={() => setIsPlaying(false)}
-              onTimeUpdate={handleTimeUpdate}
-              onLoadedMetadata={handleLoadedMetadata}
-            />
-          </>
+            <button className="mini-player-btn" onClick={(e) => { e.stopPropagation(); togglePlay(); }}>
+              {isPlaying ? <Icons.Pause /> : <Icons.Play />}
+            </button>
+            <button className="mini-player-close" onClick={(e) => { e.stopPropagation(); closeMiniPlayer(); }}>
+              <Icons.Close />
+            </button>
+          </div>
         )}
       </div>
     );
   }
 
-  // PROFILE TAB (The missing part!)
+  // PROFILE TAB
   if (activeTab === 'profile') {
-    // We sort the leaderboard data we fetched from the server
     const sortedLeaderboard = [...leaderboard].sort((a, b) => b.coins - a.coins).slice(0, 10);
-    
     return (
       <div className="app-container">
         <div className="profile-header">
           <div className="profile-avatar-container">
-            {profileImage ? (
-              <img src={profileImage} alt="Profile" className="profile-avatar-img" />
-            ) : (
-              <div className="profile-avatar-placeholder">
-                <Icons.Profile />
-              </div>
-            )}
-            <button className="profile-camera-btn" onClick={() => fileInputRef.current?.click()}>
-              <Icons.Camera />
-            </button>
-            <input 
-              ref={fileInputRef}
-              type="file" 
-              accept="image/*" 
-              style={{display: 'none'}} 
-              onChange={handleImageUpload}
-            />
+            {profileImage ? <img src={profileImage} alt="Profile" className="profile-avatar-img" /> : <div className="profile-avatar-placeholder"><Icons.Profile /></div>}
+            <button className="profile-camera-btn" onClick={() => fileInputRef.current?.click()}><Icons.Camera /></button>
+            <input ref={fileInputRef} type="file" accept="image/*" style={{display: 'none'}} onChange={handleImageUpload}/>
           </div>
-          <h2 className="profile-name-center">
-            {telegramUser ? `${telegramUser.first_name} ${telegramUser.last_name || ''}`.trim() : 'Guest User'}
-          </h2>
-          <p className="profile-username-center">
-            {telegramUser?.username ? `@${telegramUser.username}` : 'Telegram User'}
-          </p>
+          <h2 className="profile-name-center">{telegramUser ? `${telegramUser.first_name} ${telegramUser.last_name || ''}`.trim() : 'Guest User'}</h2>
+          <p className="profile-username-center">{telegramUser?.username ? `@${telegramUser.username}` : 'Telegram User'}</p>
         </div>
 
         <div className="profile-stats-3col">
@@ -746,213 +652,34 @@ function App() {
         </div>
 
         <div className="section-title" style={{marginTop: '30px'}}>
-          <span>Leaderboard</span>
-          <span className="see-all">Top Listeners</span>
+          <span>Leaderboard</span><span className="see-all">Top Listeners</span>
         </div>
 
         <div className="leaderboard">
           {sortedLeaderboard.length > 0 ? (
             sortedLeaderboard.map((user, index) => (
               <div key={user.id} className="leaderboard-item">
-                   <div className="leaderboard-left">
-                     <div className="leaderboard-rank">#{index + 1}</div>
-                     <div className="leaderboard-avatar">
-                      {index === 0 ? '🏆' : index === 1 ? '🥈' : index === 2 ? '🥉' : '👤'}
-                   </div>
-               <div className="leaderboard-name">{user.name}</div>
-        </div>
-  <div className="leaderboard-coins">{user.coins} coins</div>
-</div>
+                <div className="leaderboard-left">
+                  <div className="leaderboard-rank">#{index + 1}</div>
+                  <div className="leaderboard-avatar">{index === 0 ? '🏆' : index === 1 ? '🥈' : index === 2 ? '🥉' : '👤'}</div>
+                  <div className="leaderboard-name">{user.name}</div>
+                </div>
+                <div className="leaderboard-coins">{user.coins} coins</div>
+              </div>
             ))
           ) : (
-            <div className="empty-state">
-              <div className="empty-icon">🏆</div>
-              <h3>No ranking yet</h3>
-              <p>Start listening to earn coins and rank up!</p>
-            </div>
+            <div className="empty-state"><div className="empty-icon">🏆</div><h3>No ranking yet</h3></div>
           )}
         </div>
 
         <div className="bottom-nav">
-          <button className="nav-item" onClick={() => handleTabChange('home')}>
-            <Icons.Home />
-            <span className="nav-text">Home</span>
-          </button>
-          <button className="nav-item" onClick={() => handleTabChange('discover')}>
-            <Icons.Discover />
-            <span className="nav-text">Discover</span>
-          </button>
-          <button className="nav-item" onClick={() => handleTabChange('library')}>
-            <Icons.Library />
-            <span className="nav-text">Library</span>
-          </button>
-          <button className="nav-item active">
-            <Icons.Profile />
-            <span className="nav-text">Profile</span>
-          </button>
+          <button className="nav-item" onClick={() => handleTabChange('home')}><Icons.Home /><span className="nav-text">Home</span></button>
+          <button className="nav-item" onClick={() => handleTabChange('discover')}><Icons.Discover /><span className="nav-text">Discover</span></button>
+          <button className="nav-item" onClick={() => handleTabChange('library')}><Icons.Library /><span className="nav-text">Library</span></button>
+          <button className="nav-item active"><Icons.Profile /><span className="nav-text">Profile</span></button>
         </div>
 
         {lastPlayedEpisode && (
-          <>
-            <div className="mini-player" onClick={() => setCurrentEpisode(lastPlayedEpisode)}>
-              <img src={lastPlayedEpisode.cover} alt="Cover" className="mini-player-img" />
-              <div className="mini-player-info">
-                <div className="mini-player-title">{lastPlayedEpisode.title}</div>
-                <div className="mini-player-artist">Innovision Radio</div>
-              </div>
-              <button className="mini-player-btn" onClick={(e) => { e.stopPropagation(); togglePlay(); }}>
-                {isPlaying ? <Icons.Pause /> : <Icons.Play />}
-              </button>
-              <button className="mini-player-close" onClick={(e) => { e.stopPropagation(); closeMiniPlayer(); }}>
-                <Icons.Close />
-              </button>
-            </div>
-            <audio 
-              ref={audioRef} 
-              src={lastPlayedEpisode.audio}
-              onEnded={() => setIsPlaying(false)}
-              onTimeUpdate={handleTimeUpdate}
-              onLoadedMetadata={handleLoadedMetadata}
-            />
-          </>
-        )}
-      </div>
-    );
-  }
-
-  // HOME SCREEN
-  return (
-    <div className="app-container">
-      <div className="header">
-        <div className="header-title">Podcast<span>.</span></div>
-        <div style={{display:'flex', gap:'12px'}}>
-           <button className="icon-btn" onClick={() => setShowSearch(!showSearch)}>
-             <Icons.Search />
-           </button>
-           <button className="icon-btn" onClick={() => setActiveTab('profile')}>
-             <Icons.Profile />
-           </button>
-        </div>
-      </div>
-
-      {showSearch && (
-        <div style={{padding: '0 20px 20px'}}>
-          <input 
-            type="text"
-            placeholder="Search podcasts..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="search-input"
-          />
-        </div>
-      )}
-
-      <div className="banner-container">
-        <div 
-          className="banner" 
-          style={{
-            backgroundImage: `${BANNERS[currentBannerIndex].gradient}, url(${BANNERS[currentBannerIndex].image})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            backgroundBlendMode: 'overlay'
-          }}
-        >
-          <div className="banner-text">
-            <h2>{BANNERS[currentBannerIndex].title}<br/>{BANNERS[currentBannerIndex].subtitle}</h2>
-            <p>{BANNERS[currentBannerIndex].description}</p>
-            <button className="play-now-btn" onClick={handleBannerPlayNow}>Play Now</button>
-          </div>
-          <div className="banner-icon">🎧</div> 
-        </div>
-        <div className="banner-indicators">
-          {BANNERS.map((_, idx) => (
-            <div 
-              key={idx} 
-              className={`indicator ${currentBannerIndex === idx ? 'active' : ''}`}
-            />
-          ))}
-        </div>
-      </div>
-
-      <div className="section-title">
-        <span>Category</span>
-        <span className="see-all" onClick={() => setActiveTab('discover')}>See All</span>
-      </div>
-      <div className="categories-row">
-        {CATEGORIES.slice(0, 5).map(cat => (
-          <div 
-            key={cat.name} 
-            className="cat-item" 
-            onClick={() => handleCategoryClick(cat)}
-          >
-            <div 
-              className="cat-icon"
-              style={{
-                background: selectedCategory === cat.name ? 'var(--primary)' : 'var(--white)',
-                color: selectedCategory === cat.name ? 'white' : 'inherit'
-              }}
-            >
-              {cat.icon}
-            </div>
-            <span 
-              className="cat-name" 
-              style={{
-                color: selectedCategory === cat.name ? 'var(--primary)' : 'var(--text-grey)',
-                fontWeight: selectedCategory === cat.name ? '600' : '400'
-              }}
-            >
-              {cat.name}
-            </span>
-          </div>
-        ))}
-      </div>
-
-      <div className="section-title">
-        <span>Recommended Podcast</span>
-        <span className="see-all" onClick={() => setShowAllEpisodes(!showAllEpisodes)}>
-          {showAllEpisodes ? 'Show Less' : 'See All'}
-        </span>
-      </div>
-
-      <div className="episode-list">
-        {displayedEpisodes.map((ep, index) => (
-          <div key={index} className="episode-card" onClick={() => handlePlay(ep)}>
-            <img src={ep.cover} alt="Cover" className="card-img" />
-            <div className="card-info">
-              <h3 className="card-title">{ep.title}</h3>
-              <p className="card-sub">Episode {index + 1} • 35 mins</p>
-            </div>
-            <div className="play-icon-small">
-              <Icons.Play />
-            </div>
-          </div>
-        ))}
-        {displayedEpisodes.length === 0 && episodes.length === 0 && (
-          <p style={{textAlign:'center', color:'#999', padding: '40px 20px'}}>Loading awesome episodes...</p>
-        )}
-      </div>
-
-      <div className="bottom-nav">
-        <button className="nav-item active" onClick={() => handleTabChange('home')}>
-          <Icons.Home />
-          <span className="nav-text">Home</span>
-        </button>
-        <button className="nav-item" onClick={() => handleTabChange('discover')}>
-          <Icons.Discover />
-          <span className="nav-text">Discover</span>
-        </button>
-        <button className="nav-item" onClick={() => handleTabChange('library')}>
-          <Icons.Library />
-          <span className="nav-text">Library</span>
-        </button>
-        <button className="nav-item" onClick={() => handleTabChange('profile')}>
-          <Icons.Profile />
-          <span className="nav-text">Profile</span>
-        </button>
-      </div>
-
-      {lastPlayedEpisode && (
-        <>
           <div className="mini-player" onClick={() => setCurrentEpisode(lastPlayedEpisode)}>
             <img src={lastPlayedEpisode.cover} alt="Cover" className="mini-player-img" />
             <div className="mini-player-info">
@@ -966,14 +693,110 @@ function App() {
               <Icons.Close />
             </button>
           </div>
-          <audio 
-            ref={audioRef} 
-            src={lastPlayedEpisode.audio}
-            onEnded={() => setIsPlaying(false)}
-            onTimeUpdate={handleTimeUpdate}
-            onLoadedMetadata={handleLoadedMetadata}
-          />
-        </>
+        )}
+      </div>
+    );
+  }
+
+  // HOME SCREEN
+  return (
+    <div className="app-container">
+      <div className="header">
+        <div className="header-title">Podcast<span>.</span></div>
+        <div style={{display:'flex', gap:'12px'}}>
+           <button className="icon-btn" onClick={() => setShowSearch(!showSearch)}><Icons.Search /></button>
+           <button className="icon-btn" onClick={() => setActiveTab('profile')}><Icons.Profile /></button>
+        </div>
+      </div>
+
+      {showSearch && (
+        <div style={{padding: '0 20px 20px'}}>
+          <input type="text" placeholder="Search podcasts..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="search-input" />
+        </div>
+      )}
+
+      <div className="banner-container">
+        <div className="banner" style={{backgroundImage: `${BANNERS[currentBannerIndex].gradient}, url(${BANNERS[currentBannerIndex].image})`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundBlendMode: 'overlay'}}>
+          <div className="banner-text">
+            <h2>{BANNERS[currentBannerIndex].title}<br/>{BANNERS[currentBannerIndex].subtitle}</h2>
+            <p>{BANNERS[currentBannerIndex].description}</p>
+            <button className="play-now-btn" onClick={handleBannerPlayNow}>Play Now</button>
+          </div>
+          <div className="banner-icon">🎧</div> 
+        </div>
+        <div className="banner-indicators">
+          {BANNERS.map((_, idx) => <div key={idx} className={`indicator ${currentBannerIndex === idx ? 'active' : ''}`} />)}
+        </div>
+      </div>
+
+      <div className="section-title">
+        <span>Category</span><span className="see-all" onClick={() => setActiveTab('discover')}>See All</span>
+      </div>
+      <div className="categories-row">
+        {CATEGORIES.slice(0, 5).map(cat => (
+          <div key={cat.name} className="cat-item" onClick={() => handleCategoryClick(cat)}>
+            <div className="cat-icon" style={{background: selectedCategory === cat.name ? 'var(--primary)' : 'var(--white)', color: selectedCategory === cat.name ? 'white' : 'inherit'}}>
+              {cat.icon}
+            </div>
+            <span className="cat-name" style={{color: selectedCategory === cat.name ? 'var(--primary)' : 'var(--text-grey)', fontWeight: selectedCategory === cat.name ? '600' : '400'}}>
+              {cat.name}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      <div className="section-title">
+        <span>Latest Episodes</span>
+      </div>
+
+      <div className="episode-list">
+        {displayedEpisodes.map((ep, index) => (
+          <div key={index} className="episode-card" onClick={() => handlePlay(ep)}>
+            <img src={ep.cover} alt="Cover" className="card-img" />
+            <div className="card-info">
+              <h3 className="card-title">{ep.title}</h3>
+              <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+                 <p className="card-sub">{formatDate(ep.date)}</p>
+                 <p className="card-sub">35m</p>
+              </div>
+            </div>
+            <div className="play-icon-small"><Icons.Play /></div>
+          </div>
+        ))}
+        
+        {/* LOAD MORE BUTTON IN HOME */}
+        {visibleCount < filteredEpisodes.length && (
+          <button className="load-more-btn" onClick={handleLoadMore}>
+            Load More Episodes
+          </button>
+        )}
+
+        {displayedEpisodes.length === 0 && episodes.length === 0 && (
+          <p style={{textAlign:'center', color:'#999', padding: '40px 20px'}}>Loading awesome episodes...</p>
+        )}
+      </div>
+
+      <div className="bottom-nav">
+        <button className="nav-item active" onClick={() => handleTabChange('home')}><Icons.Home /><span className="nav-text">Home</span></button>
+        <button className="nav-item" onClick={() => handleTabChange('discover')}><Icons.Discover /><span className="nav-text">Discover</span></button>
+        <button className="nav-item" onClick={() => handleTabChange('library')}><Icons.Library /><span className="nav-text">Library</span></button>
+        <button className="nav-item" onClick={() => handleTabChange('profile')}><Icons.Profile /><span className="nav-text">Profile</span></button>
+      </div>
+
+      {lastPlayedEpisode && (
+        <div className="mini-player" onClick={() => setCurrentEpisode(lastPlayedEpisode)}>
+          <img src={lastPlayedEpisode.cover} alt="Cover" className="mini-player-img" />
+          <div className="mini-player-info">
+            <div className="mini-player-title">{lastPlayedEpisode.title}</div>
+            <div className="mini-player-artist">Innovision Radio</div>
+          </div>
+          <button className="mini-player-btn" onClick={(e) => { e.stopPropagation(); togglePlay(); }}>
+            {isPlaying ? <Icons.Pause /> : <Icons.Play />}
+          </button>
+          <button className="mini-player-close" onClick={(e) => { e.stopPropagation(); closeMiniPlayer(); }}>
+            <Icons.Close />
+          </button>
+        </div>
       )}
     </div>
   )
