@@ -174,7 +174,7 @@ function App() {
       setUserCoins(data.userCoins || 0);
       setUserRank(data.userRank || 0);
       setListeningTime(data.listeningTime || 0);
-      setLeaderboard(data.leaderboard || []);
+      // We don't load local leaderboard anymore, we fetch from server
     }
   }, []);
 
@@ -186,11 +186,10 @@ function App() {
       userCoins,
       userRank,
       listeningTime,
-      leaderboard,
       lastUpdated: new Date().toISOString()
     };
     localStorage.setItem('podcastAppData', JSON.stringify(dataToSave));
-  }, [favorites, profileImage, userCoins, userRank, listeningTime, leaderboard]);
+  }, [favorites, profileImage, userCoins, userRank, listeningTime]);
 
   useEffect(() => {
     if (window.Telegram?.WebApp) {
@@ -202,11 +201,32 @@ function App() {
       tg.setBackgroundColor('#F8F8F8');
       if (tg.initDataUnsafe?.user) {
         setTelegramUser(tg.initDataUnsafe.user);
-        // Add user to leaderboard if not exists
-        addUserToLeaderboard(tg.initDataUnsafe.user);
       }
     }
   }, []);
+
+  // Fetch Global Leaderboard (CLOUD SYNC)
+  useEffect(() => {
+     fetch('https://telegram-podcast-app.onrender.com/api/leaderboard')
+       .then(res => res.json())
+       .then(data => {
+          if (Array.isArray(data)) {
+             const formattedUsers = data.map((u, index) => ({
+                id: u.telegramId,
+                name: u.name,
+                coins: u.coins,
+                rank: index + 1
+             }));
+             setLeaderboard(formattedUsers);
+             
+             if (telegramUser) {
+                const myEntry = formattedUsers.find(u => u.id === telegramUser.id.toString());
+                if (myEntry) setUserRank(myEntry.rank);
+             }
+          }
+       })
+       .catch(err => console.error("Leaderboard fetch error:", err));
+  }, [activeTab, telegramUser]); 
 
   useEffect(() => {
     fetch('https://telegram-podcast-app.onrender.com/api/episodes')
@@ -222,7 +242,6 @@ function App() {
     return () => clearInterval(interval);
   }, []);
 
-  
   // Track listening time and award coins (REAL DATA LOGIC)
   useEffect(() => {
     let interval;
@@ -232,12 +251,9 @@ function App() {
           const newTime = prev + 1;
           
           // RULE: 2 Minutes (120 seconds) = 1 Coin
-          if (newTime > 0 && newTime % 5 === 0) {
+          if (newTime > 0 && newTime % 120 === 0) {
             setUserCoins(prevCoins => prevCoins + 1); // Award 1 coin
             updateUserInLeaderboard(1); // Update rank
-            
-            // Optional: Alert the user they earned a coin
-            // alert("You earned 1 coin for listening!"); 
           }
           return newTime;
         });
@@ -246,45 +262,27 @@ function App() {
     return () => clearInterval(interval);
   }, [isPlaying]);
 
-  const addUserToLeaderboard = (user) => {
-    setLeaderboard(prev => {
-      const existingUser = prev.find(u => u.id === user.id);
-      if (!existingUser) {
-        const newUser = {
-          id: user.id,
-          name: `${user.first_name} ${user.last_name || ''}`.trim(),
-          username: user.username,
-          coins: 0,
-          rank: 0
-        };
-        return [...prev, newUser];
-      }
-      return prev;
-    });
-  };
-
   const updateUserInLeaderboard = (coinsToAdd) => {
-    if (!telegramUser) return;
+    // 1. Update Local State (Instant visual feedback)
+    const newTotal = userCoins + coinsToAdd;
     
-    setLeaderboard(prev => {
-      const updated = prev.map(user => {
-        if (user.id === telegramUser.id) {
-          return { ...user, coins: user.coins + coinsToAdd };
-        }
-        return user;
-      });
-      
-      // Sort by coins and update ranks
-      const sorted = updated.sort((a, b) => b.coins - a.coins);
-      return sorted.map((user, index) => ({
-        ...user,
-        rank: index + 1
-      }));
-    });
-
-    // Update current user's rank
-    const myPosition = leaderboard.findIndex(u => u.id === telegramUser.id) + 1;
-    setUserRank(myPosition || 0);
+    if (telegramUser) {
+       // 2. Send to Server (The Cloud Database)
+       fetch('https://telegram-podcast-app.onrender.com/api/user/sync', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+             telegramId: telegramUser.id.toString(),
+             name: `${telegramUser.first_name} ${telegramUser.last_name || ''}`.trim(),
+             username: telegramUser.username,
+             coins: newTotal
+          })
+       }).then(res => res.json())
+         .then(data => {
+            console.log("Synced with Cloud:", data);
+         })
+         .catch(err => console.error("Sync failed:", err));
+    }
   };
 
   const handlePlay = (episode) => {
@@ -693,8 +691,9 @@ function App() {
     );
   }
 
-  // PROFILE TAB
+  // PROFILE TAB (The missing part!)
   if (activeTab === 'profile') {
+    // We sort the leaderboard data we fetched from the server
     const sortedLeaderboard = [...leaderboard].sort((a, b) => b.coins - a.coins).slice(0, 10);
     
     return (
