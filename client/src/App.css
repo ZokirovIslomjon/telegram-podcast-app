@@ -14,14 +14,13 @@ body {
 }
 
 .app-container {
-  max-width: 480px; /* Locks it to mobile size */
   width: 100%;
-  margin: 0 auto; /* Centers it on the screen */
+  margin: 0 auto;
   background: var(--bg-color);
   min-height: 100vh;
-  padding-bottom: 100px;
+  padding-bottom: 80px;
   position: relative;
-  box-shadow: 0 0 20px rgba(0,0,0,0.05); /* Adds a nice shadow on desktop */
+  overflow-x: hidden;
 }
 
 /* HEADER */
@@ -70,23 +69,40 @@ body {
 /* EPISODE LIST */
 .episode-list { padding: 0 20px; }
 .episode-card {
-  display: flex; align-items: center; background: var(--white); padding: 12px;
-  border-radius: 16px; margin-bottom: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+  display: flex;
+  align-items: center;
+  background: var(--white);
+  padding: 12px;
+  border-radius: 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+  transition: transform 0.2s, box-shadow 0.2s;
   cursor: pointer;
 }
-.card-img { 
-  width: 50px !important; /* Force width */
-  height: 50px !important; /* Force height */
-  min-width: 50px; /* Never shrink */
-  border-radius: 12px; 
-  object-fit: cover; 
-  margin-right: 14px; 
+.card-img {
+  width: 60px;
+  height: 60px;
+  border-radius: 12px;
+  object-fit: cover;
+  margin-right: 16px;
   flex-shrink: 0;
-  background: #eee; /* Grey placeholder while loading */
 }
 .card-info { flex: 1; min-width: 0; }
-.card-title { font-size: 14px; font-weight: 600; margin: 0 0 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.card-sub { font-size: 11px; color: var(--text-grey); margin: 0; }
+.card-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0;
+  margin-bottom: 4px;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.card-sub {
+  font-size: 11px;
+  color: var(--text-grey);
+}
 .play-icon-small { width: 32px; height: 32px; background: #F2F0FF; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--primary); flex-shrink: 0;}
 
 /* PROFILE PAGE - CENTERED & BALANCED */
@@ -97,7 +113,7 @@ body {
 .profile-avatar-container { position: relative; width: 100px; height: 100px; margin-bottom: 12px; }
 .profile-avatar-img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 4px solid var(--primary); }
 .profile-avatar-placeholder { width: 100%; height: 100%; border-radius: 50%; background: #eee; display: flex; align-items: center; justify-content: center; border: 4px solid var(--primary); }
-.profile-camera-btn { position: absolute; bottom: 0; right: 0; width: 32px; height: 32px; background: var(--white); border: 2px solid var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--primary); }
+.profile-camera-btn { position: absolute; bottom: 0; right: 0; width: 32px; height: 32px; background: var(#6C5DD3); border: 2px solid var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--primary); }
 .profile-name-center { margin: 0 0 4px; font-size: 22px; font-weight: 700; }
 .profile-username-center { margin: 0; font-size: 14px; color: var(--text-grey); }
 
