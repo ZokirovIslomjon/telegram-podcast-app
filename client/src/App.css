@@ -181,20 +181,90 @@ body {
 }
 
 /* FULL SCREEN PLAYER - BIGGER BUTTONS */
-.player-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--white); z-index: 200; display: flex; flex-direction: column; padding: 24px; box-sizing: border-box; }
-.player-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+/* --- FULL SCREEN PLAYER (FIXED LAYOUT) --- */
+.player-overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: var(--white);
+  z-index: 200;
+  display: flex; flex-direction: column;
+  /* Add big bottom padding to avoid iPhone Home Indicator */
+  padding: 24px 24px 80px; 
+  box-sizing: border-box;
+  overflow-y: auto; /* Allows scrolling on very small screens */
+}
+
+.player-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 20px; flex-shrink: 0;
+}
 .now-playing-text { font-weight: 600; font-size: 16px; }
 
-.album-art-large { width: 100%; aspect-ratio: 1; border-radius: 24px; object-fit: cover; box-shadow: 0 20px 40px rgba(108, 93, 211, 0.2); margin-bottom: 30px; }
-.track-info { text-align: center; margin-bottom: 30px; }
+.album-art-large {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 24px;
+  object-fit: cover;
+  box-shadow: 0 20px 40px rgba(108, 93, 211, 0.2);
+  margin-bottom: 20px;
+  /* Prevent image from pushing buttons off screen */
+  max-height: 45vh; 
+  flex-shrink: 1;
+}
+
+.track-info {
+  text-align: center;
+  margin-bottom: 20px;
+  flex-shrink: 0;
+}
 .track-title { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
 .track-artist { font-size: 14px; color: var(--text-grey); }
 
-.progress-container { margin-bottom: 40px; }
+.progress-container {
+  margin-bottom: 30px;
+  width: 100%;
+  flex-shrink: 0;
+}
 .progress-bar { width: 100%; height: 6px; background: #E0E0E0; border-radius: 3px; position: relative; }
 .progress-fill { height: 100%; background: var(--primary); border-radius: 3px; }
 .progress-thumb { position: absolute; right: -8px; top: -5px; width: 16px; height: 16px; background: var(--primary); border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
 .time-display { display: flex; justify-content: space-between; margin-top: 10px; font-size: 12px; color: var(--text-grey); font-family: monospace; }
+
+/* CONTROLS - FIXED ALIGNMENT */
+.controls-large {
+  display: flex;
+  justify-content: space-between; /* Space them out evenly */
+  align-items: center;
+  width: 100%;
+  margin-top: auto; /* Push to bottom */
+  padding: 0 10px;
+}
+
+.control-btn-small { 
+  background: transparent; border: none; color: var(--text-grey); 
+  width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;
+}
+.control-btn-small svg { width: 24px; height: 24px; }
+
+.control-btn-skip { 
+  background: transparent; border: none; color: var(--text-dark); 
+  width: 50px; height: 50px; display: flex; align-items: center; justify-content: center;
+}
+.control-btn-skip svg { width: 32px; height: 32px; }
+
+.control-btn-nav { 
+  background: transparent; border: none; color: var(--text-dark); 
+  width: 60px; height: 60px; display: flex; align-items: center; justify-content: center;
+}
+.control-btn-nav svg { width: 40px; height: 40px; }
+
+.play-btn-extra-large {
+  width: 80px; height: 80px;
+  background: var(--primary); border-radius: 50%; color: white; border: none;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 10px 25px rgba(108, 93, 211, 0.4);
+  flex-shrink: 0; /* Never shrink the play button */
+}
+.play-btn-extra-large svg { width: 36px; height: 36px; }
 
 /* BIGGER CONTROLS */
 .controls-large {
