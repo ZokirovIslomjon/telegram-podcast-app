@@ -14,11 +14,14 @@ body {
 }
 
 .app-container {
-  max-width: 100%;
-  margin: 0 auto;
+  max-width: 480px; /* Locks it to mobile size */
+  width: 100%;
+  margin: 0 auto; /* Centers it on the screen */
   background: var(--bg-color);
   min-height: 100vh;
-  padding-bottom: 100px; /* More space for mini player */
+  padding-bottom: 100px;
+  position: relative;
+  box-shadow: 0 0 20px rgba(0,0,0,0.05); /* Adds a nice shadow on desktop */
 }
 
 /* HEADER */
@@ -71,7 +74,16 @@ body {
   border-radius: 16px; margin-bottom: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.02);
   cursor: pointer;
 }
-.card-img { width: 50px; height: 50px; border-radius: 12px; object-fit: cover; margin-right: 14px; flex-shrink: 0;}
+.card-img { 
+  width: 50px !important; /* Force width */
+  height: 50px !important; /* Force height */
+  min-width: 50px; /* Never shrink */
+  border-radius: 12px; 
+  object-fit: cover; 
+  margin-right: 14px; 
+  flex-shrink: 0;
+  background: #eee; /* Grey placeholder while loading */
+}
 .card-info { flex: 1; min-width: 0; }
 .card-title { font-size: 14px; font-weight: 600; margin: 0 0 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .card-sub { font-size: 11px; color: var(--text-grey); margin: 0; }
