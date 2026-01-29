@@ -222,7 +222,7 @@ function App() {
     return () => clearInterval(interval);
   }, []);
 
-  // Track listening time and award coins
+  
   // Track listening time and award coins (REAL DATA LOGIC)
   useEffect(() => {
     let interval;
@@ -232,7 +232,7 @@ function App() {
           const newTime = prev + 1;
           
           // RULE: 2 Minutes (120 seconds) = 1 Coin
-          if (newTime > 0 && newTime % 120 === 0) {
+          if (newTime > 0 && newTime % 5 === 0) {
             setUserCoins(prevCoins => prevCoins + 1); // Award 1 coin
             updateUserInLeaderboard(1); // Update rank
             
