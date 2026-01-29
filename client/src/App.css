@@ -183,14 +183,17 @@ body {
 /* FULL SCREEN PLAYER - BIGGER BUTTONS */
 /* --- FULL SCREEN PLAYER (FIXED LAYOUT) --- */
 .player-overlay {
-  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  position: fixed; 
+  top: 0; left: 0; right: 0; bottom: 0;
   background: var(--white);
-  z-index: 200;
-  display: flex; flex-direction: column;
-  /* Add big bottom padding to avoid iPhone Home Indicator */
-  padding: 24px 24px 80px; 
+  z-index: 9999; /* Force it on top */
+  display: flex; 
+  flex-direction: column;
+  /* HUGE padding to guarantee safety from iPhone Home Bar */
+  padding: 24px 24px 120px !important; 
   box-sizing: border-box;
-  overflow-y: auto; /* Allows scrolling on very small screens */
+  overflow-y: auto;
+  height: 100vh; /* Force full height */
 }
 
 .player-header {
@@ -232,11 +235,11 @@ body {
 /* CONTROLS - FIXED ALIGNMENT */
 .controls-large {
   display: flex;
-  justify-content: space-between; /* Space them out evenly */
+  justify-content: space-evenly;
   align-items: center;
   width: 100%;
-  margin-top: auto; /* Push to bottom */
-  padding: 0 10px;
+  margin-top: auto; /* Pushes controls down */
+  padding-bottom: 20px; /* Extra breathing room inside the container */
 }
 
 .control-btn-small { 
