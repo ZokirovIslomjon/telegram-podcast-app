@@ -36,20 +36,36 @@ const RSS_FEED_URL = "https://changelog.com/master/feed";
 // 3. API ROUTES
 // ---------------------------------------------------------
 
+// Keep the parsed feed in memory so requests don't re-download the RSS every time
+const CACHE_MS = 10 * 60 * 1000; // refresh at most every 10 minutes
+let episodesCache = null;
+let cacheTime = 0;
+
+async function loadEpisodes() {
+    const feed = await parser.parseURL(RSS_FEED_URL);
+    episodesCache = feed.items.map((item, index) => ({
+        id: index + 1,
+        title: item.title,
+        description: item.contentSnippet || "No description", 
+        cover: item.itunes?.image || feed.image?.url || "https://via.placeholder.com/300",
+        audio: item.enclosure?.url,
+        category: "Tech",
+        date: item.pubDate
+    }));
+    cacheTime = Date.now();
+    return episodesCache;
+}
+loadEpisodes().catch(err => console.error('❌ Initial RSS load failed:', err)); // warm up on start
+
 // GET: Fetch Podcasts (RSS)
 app.get('/api/episodes', async (req, res) => {
+    if (episodesCache) {
+        res.json(episodesCache); // answer instantly from memory
+        if (Date.now() - cacheTime > CACHE_MS) loadEpisodes().catch(() => {}); // refresh in background
+        return;
+    }
     try {
-        const feed = await parser.parseURL(RSS_FEED_URL);
-        const formattedEpisodes = feed.items.map((item, index) => ({
-            id: index + 1,
-            title: item.title,
-            description: item.contentSnippet || "No description", 
-            cover: item.itunes?.image || feed.image?.url || "https://via.placeholder.com/300",
-            audio: item.enclosure?.url,
-            category: "Tech",
-            date: item.pubDate
-        }));
-        res.json(formattedEpisodes);
+        res.json(await loadEpisodes());
     } catch (error) {
         res.status(500).json({ error: "Failed to fetch RSS feed" });
     }
