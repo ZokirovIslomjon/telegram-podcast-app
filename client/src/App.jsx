@@ -54,6 +54,11 @@ const Icons = {
       <path d="M19 12H5M12 19l-7-7 7-7"/>
     </svg>
   ),
+  ChevronDown: () => (
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="6 9 12 15 18 9"/>
+    </svg>
+  ),
   Close: () => (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
       <line x1="18" y1="6" x2="6" y2="18"/>
@@ -76,14 +81,14 @@ const Icons = {
     <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <path d="M22 12A10 10 0 1 1 12 2"/>
       <path d="M22 2v6h-6"/>
-      <text x="9" y="15" fontSize="7" fill="currentColor" fontWeight="bold">+10</text>
+      <text x="9" y="15" fontSize="7" fill="currentColor" stroke="none" fontWeight="bold">+10</text>
     </svg>
   ),
   Backward10: () => (
     <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <path d="M2 12A10 10 0 1 0 12 2"/>
       <path d="M2 2v6h6"/>
-      <text x="9" y="15" fontSize="7" fill="currentColor" fontWeight="bold">-10</text>
+      <text x="9" y="15" fontSize="7" fill="currentColor" stroke="none" fontWeight="bold">-10</text>
     </svg>
   ),
   Shuffle: () => (
@@ -199,8 +204,8 @@ function App() {
       tg.ready();
       tg.expand();
       tg.enableClosingConfirmation();
-      tg.setHeaderColor('#F8F8F8');
-      tg.setBackgroundColor('#F8F8F8');
+      tg.setHeaderColor('#121212');
+      tg.setBackgroundColor('#121212');
       if (tg.initDataUnsafe?.user) {
         setTelegramUser(tg.initDataUnsafe.user);
       }
@@ -296,16 +301,15 @@ function App() {
 
   const handlePlay = (episode) => {
     setCurrentEpisode(episode);
-    setLastPlayedEpisode(episode);
-    setIsPlaying(true);
+    if (episode.audio === lastPlayedEpisode?.audio) audioRef.current?.play();
+    else setLastPlayedEpisode(episode); // new src + autoPlay starts it
   };
 
   const togglePlay = () => {
-    if (audioRef.current) {
-      if (isPlaying) audioRef.current.pause();
-      else audioRef.current.play();
-      setIsPlaying(!isPlaying);
-    }
+    const audio = audioRef.current;
+    if (!audio) return;
+    if (audio.paused) audio.play();
+    else audio.pause();
   };
 
   const skipForward = () => {
@@ -332,13 +336,11 @@ function App() {
 
   const handleLoadedMetadata = () => {
     if (audioRef.current) setDuration(audioRef.current.duration);
+    updatePositionState();
   };
 
   const handleSeek = (e) => {
-    const progressBar = e.currentTarget;
-    const clickPosition = e.nativeEvent.offsetX;
-    const progressBarWidth = progressBar.offsetWidth;
-    const newTime = (clickPosition / progressBarWidth) * duration;
+    const newTime = Number(e.target.value);
     if (audioRef.current) {
       audioRef.current.currentTime = newTime;
       setCurrentTime(newTime);
@@ -383,8 +385,7 @@ function App() {
 
   const handleBannerPlayNow = () => {
     if (lastPlayedEpisode) {
-      setCurrentEpisode(lastPlayedEpisode);
-      setIsPlaying(true);
+      handlePlay(lastPlayedEpisode);
     } else if (episodes.length > 0) {
       handlePlay(episodes[0]);
     }
@@ -404,6 +405,35 @@ function App() {
     }
   };
 
+  // LOCK SCREEN / NOTIFICATION CONTROLS (Media Session API)
+  useEffect(() => {
+    if (!('mediaSession' in navigator) || !lastPlayedEpisode) return;
+    const ms = navigator.mediaSession;
+    ms.metadata = new window.MediaMetadata({
+      title: lastPlayedEpisode.title,
+      artist: 'Innovision Radio',
+      artwork: [{ src: lastPlayedEpisode.cover, sizes: '512x512' }]
+    });
+    const handlers = {
+      play: () => audioRef.current?.play(),
+      pause: () => audioRef.current?.pause(),
+      seekbackward: skipBackward,
+      seekforward: skipForward,
+      previoustrack: playPrevious,
+      nexttrack: playNext,
+      seekto: (d) => { if (audioRef.current) audioRef.current.currentTime = d.seekTime; }
+    };
+    Object.entries(handlers).forEach(([action, fn]) => {
+      try { ms.setActionHandler(action, fn); } catch { /* unsupported action */ }
+    });
+  }, [lastPlayedEpisode, episodes, duration]);
+
+  const updatePositionState = () => {
+    const a = audioRef.current;
+    if (!a || !('mediaSession' in navigator) || !isFinite(a.duration)) return;
+    try { navigator.mediaSession.setPositionState({ duration: a.duration, position: a.currentTime, playbackRate: a.playbackRate }); } catch { /* ignore */ }
+  };
+
   // FILTERING LOGIC
   const filteredEpisodes = episodes.filter(ep => {
     const matchesCategory = !selectedCategory || ep.title.toLowerCase().includes(selectedCategory.toLowerCase());
@@ -421,60 +451,65 @@ function App() {
     setVisibleCount(prev => prev + 15);
   };
 
+  const renderPage = () => {
   // FULL SCREEN PLAYER
   if (currentEpisode) {
+    const progress = duration ? (currentTime / duration) * 100 : 0;
     return (
       <div className="player-overlay">
+        <div className="player-bg" style={{ backgroundImage: `url(${currentEpisode.cover})` }} />
+
         <div className="player-header">
-          <button className="icon-btn" onClick={closePlayer}>
-            <Icons.BackArrow />
+          <button className="icon-btn" onClick={closePlayer} aria-label="Close player">
+            <Icons.ChevronDown />
           </button>
-          <span className="now-playing-text">Now Playing</span>
-          <button className="icon-btn" onClick={() => toggleFavorite(currentEpisode)}>
+          <div className="player-header-text">
+            <span className="player-header-label">Playing from podcast</span>
+            <span className="now-playing-text">Innovision Radio</span>
+          </div>
+          <span className="icon-btn-spacer" />
+        </div>
+
+        <div className="album-art-wrap">
+          <img src={currentEpisode.cover} alt="Art" className="album-art-large" />
+        </div>
+
+        <div className="track-row">
+          <div className="track-info">
+            <h2 className="track-title">{currentEpisode.title}</h2>
+            <p className="track-artist">Innovision Radio · {formatDate(currentEpisode.date)}</p>
+          </div>
+          <button className="icon-btn" onClick={() => toggleFavorite(currentEpisode)} aria-label="Favorite">
             <Icons.Heart filled={isFavorite(currentEpisode)} />
           </button>
         </div>
-        
-        <img src={currentEpisode.cover} alt="Art" className="album-art-large" />
-        
-        <div className="track-info">
-          <h2 className="track-title">{currentEpisode.title}</h2>
-          <p className="track-artist">Innovision Radio</p>
-          <p style={{fontSize:'12px', color:'#999', marginTop:'4px'}}>{formatDate(currentEpisode.date)}</p>
-        </div>
 
         <div className="progress-container">
-          <div className="progress-bar" onClick={handleSeek}>
-            <div className="progress-fill" style={{width: `${(currentTime / duration) * 100}%`}}>
-              <div className="progress-thumb"></div>
-            </div>
-          </div>
+          <input
+            type="range"
+            className="progress-range"
+            min="0"
+            max={duration || 0}
+            step="0.1"
+            value={currentTime}
+            onChange={handleSeek}
+            style={{ '--progress': `${progress}%` }}
+          />
           <div className="time-display">
             <span>{formatTime(currentTime)}</span>
-            <span>{formatTime(duration)}</span>
+            <span>-{formatTime(Math.max(duration - currentTime, 0))}</span>
           </div>
         </div>
 
         <div className="controls-large">
-          <button className="control-btn-small"><Icons.Shuffle /></button>
-          <button className="control-btn-nav" onClick={playPrevious}><Icons.SkipPrevious /></button>
-          <button className="control-btn-skip" onClick={skipBackward}><Icons.Backward10 /></button>
-          <button className="play-btn-extra-large" onClick={togglePlay}>
+          <button className="control-btn-nav" onClick={playPrevious} aria-label="Previous"><Icons.SkipPrevious /></button>
+          <button className="control-btn-skip" onClick={skipBackward} aria-label="Back 10 seconds"><Icons.Backward10 /></button>
+          <button className="play-btn-extra-large" onClick={togglePlay} aria-label={isPlaying ? 'Pause' : 'Play'}>
             {isPlaying ? <Icons.Pause /> : <Icons.Play />}
           </button>
-          <button className="control-btn-skip" onClick={skipForward}><Icons.Forward10 /></button>
-          <button className="control-btn-nav" onClick={playNext}><Icons.SkipNext /></button>
-          <button className="control-btn-small"><Icons.Repeat /></button>
+          <button className="control-btn-skip" onClick={skipForward} aria-label="Forward 10 seconds"><Icons.Forward10 /></button>
+          <button className="control-btn-nav" onClick={playNext} aria-label="Next"><Icons.SkipNext /></button>
         </div>
-
-        <audio 
-          ref={audioRef} 
-          src={currentEpisode.audio} 
-          autoPlay 
-          onEnded={() => setIsPlaying(false)}
-          onTimeUpdate={handleTimeUpdate}
-          onLoadedMetadata={handleLoadedMetadata}
-        />
       </div>
     )
   }
@@ -799,6 +834,26 @@ function App() {
         </div>
       )}
     </div>
+  )
+  };
+
+  return (
+    <>
+      {renderPage()}
+      {lastPlayedEpisode && (
+        <audio
+          ref={audioRef}
+          src={lastPlayedEpisode.audio}
+          autoPlay
+          onPlay={() => { setIsPlaying(true); updatePositionState(); }}
+          onPause={() => setIsPlaying(false)}
+          onEnded={() => setIsPlaying(false)}
+          onSeeked={updatePositionState}
+          onTimeUpdate={handleTimeUpdate}
+          onLoadedMetadata={handleLoadedMetadata}
+        />
+      )}
+    </>
   )
 }
 
