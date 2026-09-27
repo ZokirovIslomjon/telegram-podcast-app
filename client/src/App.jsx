@@ -237,12 +237,22 @@ function App() {
 
   // FETCH EPISODES & SORT BY DATE
   useEffect(() => {
+    // Show last saved episodes instantly, then refresh from the server in the background
+    try {
+      const cached = JSON.parse(localStorage.getItem('episodesCache'));
+      if (Array.isArray(cached)) setEpisodes(cached);
+    } catch { /* no cache yet */ }
+
     fetch('https://telegram-podcast-app.onrender.com/api/episodes')
       .then(res => res.json())
       .then(data => {
+        if (!Array.isArray(data)) return;
         // SORT: Newest First
         const sortedData = data.sort((a, b) => new Date(b.date) - new Date(a.date));
         setEpisodes(sortedData);
+        // Save only the fields the app uses, so it fits in localStorage
+        const slim = sortedData.map(({ title, cover, audio, date }) => ({ title, cover, audio, date }));
+        try { localStorage.setItem('episodesCache', JSON.stringify(slim)); } catch { /* storage full */ }
       })
       .catch(err => console.error(err));
   }, []);
