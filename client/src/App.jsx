@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import './App.css'
 
 // SVG Icons Components
@@ -119,6 +119,7 @@ const Icons = {
 // Poddex DB (Supabase) – publishable key is safe to ship in the app (read-only via RLS)
 const SUPABASE_URL = 'https://uqphmtuqncddzsvjaxqu.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_PxlMl3gWmL_kT2kap6MOZw_Vq7FNuci';
+const CHANNEL_URL = 'https://t.me/Poddex_Podcast';
 
 // Categories
 const CATEGORIES = [
@@ -169,11 +170,15 @@ function App() {
   const [userRank, setUserRank] = useState(0);
   const [leaderboard, setLeaderboard] = useState([]);
   const [listeningTime, setListeningTime] = useState(0);
+  const [isChannelMember, setIsChannelMember] = useState(null); // null = unknown (don't nag)
+  const [showJoinPrompt, setShowJoinPrompt] = useState(false);
+  const [lyrics, setLyrics] = useState(null); // null = loading/none, [] = not available
   
   // NEW: PAGINATION STATE
   const [visibleCount, setVisibleCount] = useState(15);
   
   const audioRef = useRef(null);
+  const lyricsBoxRef = useRef(null);
   const fileInputRef = useRef(null);
 
   // Load data from localStorage on mount
@@ -216,6 +221,45 @@ function App() {
     }
   }, []);
 
+  // Record today's visit (DAU/WAU/MAU) and check if the user joined our channel.
+  // Runs on open and again whenever the user comes back to the app (e.g. after joining).
+  const checkChannelMembership = () => {
+    const initData = window.Telegram?.WebApp?.initData;
+    if (!initData) return; // opened outside Telegram
+    fetch(`${SUPABASE_URL}/functions/v1/app-open`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ initData })
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (typeof data.isMember !== 'boolean') return;
+        setIsChannelMember(data.isMember);
+        if (data.isMember) setShowJoinPrompt(false);
+      })
+      .catch(err => console.error('app-open failed:', err));
+  };
+
+  useEffect(() => {
+    checkChannelMembership();
+    const tg = window.Telegram?.WebApp;
+    const onVisible = () => { if (document.visibilityState === 'visible') checkChannelMembership(); };
+    tg?.onEvent?.('activated', checkChannelMembership);
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      tg?.offEvent?.('activated', checkChannelMembership);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+  }, []);
+
+  const joinChannel = () => {
+    const tg = window.Telegram?.WebApp;
+    // Opens the channel inside Telegram; the mini app stays open (minimized) and audio keeps playing
+    if (tg?.openTelegramLink) tg.openTelegramLink(CHANNEL_URL);
+    else window.open(CHANNEL_URL, '_blank');
+    setShowJoinPrompt(false);
+  };
+
   // Fetch Global Leaderboard (CLOUD SYNC)
   useEffect(() => {
      fetch('https://telegram-podcast-app.onrender.com/api/leaderboard')
@@ -244,13 +288,13 @@ function App() {
     const PAGE = 1000; // Supabase returns max 1000 rows per request
     const loadPage = async (offset, loaded) => {
       const res = await fetch(
-        `${SUPABASE_URL}/rest/v1/episodes?select=title,image,audio_url,published_at&order=published_at.desc&limit=${PAGE}&offset=${offset}`,
+        `${SUPABASE_URL}/rest/v1/episodes?select=title,image,audio_url,published_at,transcript_url&order=published_at.desc&limit=${PAGE}&offset=${offset}`,
         { headers: { apikey: SUPABASE_KEY } }
       );
       const rows = await res.json();
       if (!Array.isArray(rows)) throw new Error(rows?.message || 'Failed to load episodes');
       // Newest first already; map to the shape the UI uses
-      const all = loaded.concat(rows.map(r => ({ title: r.title, cover: r.image, audio: r.audio_url, date: r.published_at })));
+      const all = loaded.concat(rows.map(r => ({ title: r.title, cover: r.image, audio: r.audio_url, date: r.published_at, transcript: r.transcript_url })));
       setEpisodes(all); // show the first page immediately
       if (rows.length === PAGE) await loadPage(offset + PAGE, all);
     };
@@ -310,6 +354,7 @@ function App() {
   };
 
   const handlePlay = (episode) => {
+    if (isChannelMember === false) setShowJoinPrompt(true);
     setCurrentEpisode(episode);
     if (episode.audio === lastPlayedEpisode?.audio) audioRef.current?.play();
     else setLastPlayedEpisode(episode); // new src + autoPlay starts it
@@ -461,6 +506,53 @@ function App() {
     setVisibleCount(prev => prev + 15);
   };
 
+  // LYRICS: load the episode's transcript
+  useEffect(() => {
+    setLyrics(null);
+    const url = lastPlayedEpisode?.transcript;
+    if (!url) return;
+    let cancelled = false;
+    fetch(`${SUPABASE_URL}/functions/v1/transcript?url=${encodeURIComponent(url)}`)
+      .then(res => res.json())
+      .then(data => { if (!cancelled) setLyrics(Array.isArray(data.lines) ? data.lines : []); })
+      .catch(() => { if (!cancelled) setLyrics([]); });
+    return () => { cancelled = true; };
+  }, [lastPlayedEpisode]);
+
+  // Give each line a start time: exact where the transcript has a [mm:ss] marker,
+  // in between spread by text length up to the next marker (or the end of the episode).
+  const lyricTimes = useMemo(() => {
+    if (!lyrics?.length || !duration) return [];
+    const anchors = [{ i: 0, t: 0 }];
+    lyrics.forEach((line, i) => {
+      const last = anchors[anchors.length - 1];
+      if (i > 0 && line.at > last.t && line.at < duration) anchors.push({ i, t: line.at });
+    });
+    anchors.push({ i: lyrics.length, t: duration });
+    const times = [];
+    for (let a = 0; a < anchors.length - 1; a++) {
+      const { i: from, t: t0 } = anchors[a];
+      const { i: to, t: t1 } = anchors[a + 1];
+      const total = lyrics.slice(from, to).reduce((sum, l) => sum + l.text.length, 0) || 1;
+      let chars = 0;
+      for (let i = from; i < to; i++) {
+        times[i] = t0 + ((t1 - t0) * chars) / total;
+        chars += lyrics[i].text.length;
+      }
+    }
+    return times;
+  }, [lyrics, duration]);
+
+  let activeLine = -1;
+  for (let i = 0; i < lyricTimes.length && lyricTimes[i] <= currentTime; i++) activeLine = i;
+
+  // Keep the current line in view (scrolls only the lyrics box, not the page)
+  useEffect(() => {
+    const box = lyricsBoxRef.current;
+    const el = box?.children[activeLine];
+    if (el) box.scrollTo({ top: el.offsetTop - box.clientHeight / 3, behavior: 'smooth' });
+  }, [activeLine]);
+
   const renderPage = () => {
   // FULL SCREEN PLAYER
   if (currentEpisode) {
@@ -469,6 +561,7 @@ function App() {
       <div className="player-overlay">
         <div className="player-bg" style={{ backgroundImage: `url(${currentEpisode.cover})` }} />
 
+        <div className={`player-main ${currentEpisode.transcript ? 'has-lyrics' : ''}`}>
         <div className="player-header">
           <button className="icon-btn" onClick={closePlayer} aria-label="Close player">
             <Icons.ChevronDown />
@@ -520,6 +613,27 @@ function App() {
           <button className="control-btn-skip" onClick={skipForward} aria-label="Forward 10 seconds"><Icons.Forward10 /></button>
           <button className="control-btn-nav" onClick={playNext} aria-label="Next"><Icons.SkipNext /></button>
         </div>
+        </div>
+
+        {currentEpisode.transcript && (
+          <div className="lyrics-card">
+            <div className="lyrics-title">Lyrics</div>
+            {lyrics === null && <p className="lyrics-empty">Loading lyrics…</p>}
+            {lyrics?.length === 0 && <p className="lyrics-empty">Lyrics aren't available for this episode.</p>}
+            {lyrics?.length > 0 && (
+              <div className="lyrics-box" ref={lyricsBoxRef}>
+                {lyrics.map((line, i) => (
+                  <div key={i} className={`lyrics-line ${i === activeLine ? 'active' : i < activeLine ? 'past' : ''}`}>
+                    {line.speaker && (i === 0 || lyrics[i - 1].speaker !== line.speaker) && (
+                      <span className="lyrics-speaker">{line.speaker}</span>
+                    )}
+                    {line.text}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
     )
   }
@@ -862,6 +976,17 @@ function App() {
           onTimeUpdate={handleTimeUpdate}
           onLoadedMetadata={handleLoadedMetadata}
         />
+      )}
+      {showJoinPrompt && (
+        <div className="join-backdrop" onClick={() => setShowJoinPrompt(false)}>
+          <div className="join-sheet" onClick={(e) => e.stopPropagation()}>
+            <img src="/logo.png" alt="" className="join-logo" />
+            <h3 className="join-title">Join Poddex on Telegram</h3>
+            <p className="join-text">Get new episodes and updates first. Your podcast keeps playing while you join.</p>
+            <button className="join-btn" onClick={joinChannel}>Join channel</button>
+            <button className="join-later" onClick={() => setShowJoinPrompt(false)}>Later</button>
+          </div>
+        </div>
       )}
     </>
   )

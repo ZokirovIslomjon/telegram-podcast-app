@@ -90,9 +90,14 @@ bot.command('stats', async (ctx) => {
     try {
         const res = await fetch(`${process.env.SUPABASE_URL}/rest/v1/rpc/usage_stats`, {
             method: 'POST',
-            headers: { apikey: process.env.SUPABASE_SERVICE_ROLE_KEY, 'Content-Type': 'application/json' },
+            headers: {
+                apikey: process.env.SUPABASE_SERVICE_ROLE_KEY,
+                Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`, // without this Supabase runs the call as a public user
+                'Content-Type': 'application/json'
+            },
             body: '{}'
         });
+        if (!res.ok) throw new Error(`Supabase ${res.status}: ${await res.text()}`);
         const [s] = await res.json();
         ctx.reply(`📊 Poddex active users\n\nToday: ${s.today}\nLast 7 days: ${s.last_7_days}\nLast 30 days: ${s.last_30_days}\nAll time: ${s.all_time}`);
     } catch (err) {
