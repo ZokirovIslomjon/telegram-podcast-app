@@ -1,12 +1,10 @@
 const express = require('express');
 const cors = require('cors');
-const Parser = require('rss-parser');
 const mongoose = require('mongoose');
 const { Telegraf } = require('telegraf');
 require('dotenv').config();
 
 const app = express();
-const parser = new Parser();
 app.use(cors());
 app.use(express.json()); // Allows the server to read JSON data
 
@@ -28,48 +26,9 @@ const UserSchema = new mongoose.Schema({
 const User = mongoose.model('User', UserSchema);
 
 // ---------------------------------------------------------
-// 2. RSS PODCAST CONFIGURATION
+// 2. API ROUTES
+// (Episodes now come from the Poddex DB on Supabase, synced hourly by the sync-rss job)
 // ---------------------------------------------------------
-const RSS_FEED_URL = "https://changelog.com/master/feed"; 
-
-// ---------------------------------------------------------
-// 3. API ROUTES
-// ---------------------------------------------------------
-
-// Keep the parsed feed in memory so requests don't re-download the RSS every time
-const CACHE_MS = 10 * 60 * 1000; // refresh at most every 10 minutes
-let episodesCache = null;
-let cacheTime = 0;
-
-async function loadEpisodes() {
-    const feed = await parser.parseURL(RSS_FEED_URL);
-    episodesCache = feed.items.map((item, index) => ({
-        id: index + 1,
-        title: item.title,
-        description: item.contentSnippet || "No description", 
-        cover: item.itunes?.image || feed.image?.url || "https://via.placeholder.com/300",
-        audio: item.enclosure?.url,
-        category: "Tech",
-        date: item.pubDate
-    }));
-    cacheTime = Date.now();
-    return episodesCache;
-}
-loadEpisodes().catch(err => console.error('❌ Initial RSS load failed:', err)); // warm up on start
-
-// GET: Fetch Podcasts (RSS)
-app.get('/api/episodes', async (req, res) => {
-    if (episodesCache) {
-        res.json(episodesCache); // answer instantly from memory
-        if (Date.now() - cacheTime > CACHE_MS) loadEpisodes().catch(() => {}); // refresh in background
-        return;
-    }
-    try {
-        res.json(await loadEpisodes());
-    } catch (error) {
-        res.status(500).json({ error: "Failed to fetch RSS feed" });
-    }
-});
 
 // GET: Global Leaderboard (Top 50 Users)
 app.get('/api/leaderboard', async (req, res) => {
@@ -122,6 +81,24 @@ bot.start((ctx) => {
             inline_keyboard: [[{ text: "Open App 🚀", web_app: { url: "https://telegram-podcast-app.vercel.app/" } }]]
         }
     });
+});
+// /stats – daily / weekly / monthly active users (only for ADMIN_TELEGRAM_ID)
+bot.command('stats', async (ctx) => {
+    if (String(ctx.from.id) !== process.env.ADMIN_TELEGRAM_ID) {
+        return ctx.reply(`Not allowed. Your Telegram ID is ${ctx.from.id}.`);
+    }
+    try {
+        const res = await fetch(`${process.env.SUPABASE_URL}/rest/v1/rpc/usage_stats`, {
+            method: 'POST',
+            headers: { apikey: process.env.SUPABASE_SERVICE_ROLE_KEY, 'Content-Type': 'application/json' },
+            body: '{}'
+        });
+        const [s] = await res.json();
+        ctx.reply(`📊 Poddex active users\n\nToday: ${s.today}\nLast 7 days: ${s.last_7_days}\nLast 30 days: ${s.last_30_days}\nAll time: ${s.all_time}`);
+    } catch (err) {
+        console.error('Stats error:', err);
+        ctx.reply('❌ Could not load stats.');
+    }
 });
 bot.telegram.deleteWebhook().then(() => bot.launch({ dropPendingUpdates: true }));
 

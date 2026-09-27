@@ -116,6 +116,10 @@ const Icons = {
   )
 };
 
+// Poddex DB (Supabase) – publishable key is safe to ship in the app (read-only via RLS)
+const SUPABASE_URL = 'https://uqphmtuqncddzsvjaxqu.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_PxlMl3gWmL_kT2kap6MOZw_Vq7FNuci';
+
 // Categories
 const CATEGORIES = [
   { name: "Gaming", icon: "🎮" },
@@ -235,26 +239,22 @@ function App() {
        .catch(err => console.error("Leaderboard fetch error:", err));
   }, [activeTab, telegramUser]); 
 
-  // FETCH EPISODES & SORT BY DATE
+  // FETCH EPISODES from Poddex DB (Supabase, always on). An hourly background job fills it from RSS.
   useEffect(() => {
-    // Show last saved episodes instantly, then refresh from the server in the background
-    try {
-      const cached = JSON.parse(localStorage.getItem('episodesCache'));
-      if (Array.isArray(cached)) setEpisodes(cached);
-    } catch { /* no cache yet */ }
-
-    fetch('https://telegram-podcast-app.onrender.com/api/episodes')
-      .then(res => res.json())
-      .then(data => {
-        if (!Array.isArray(data)) return;
-        // SORT: Newest First
-        const sortedData = data.sort((a, b) => new Date(b.date) - new Date(a.date));
-        setEpisodes(sortedData);
-        // Save only the fields the app uses, so it fits in localStorage
-        const slim = sortedData.map(({ title, cover, audio, date }) => ({ title, cover, audio, date }));
-        try { localStorage.setItem('episodesCache', JSON.stringify(slim)); } catch { /* storage full */ }
-      })
-      .catch(err => console.error(err));
+    const PAGE = 1000; // Supabase returns max 1000 rows per request
+    const loadPage = async (offset, loaded) => {
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/episodes?select=title,image,audio_url,published_at&order=published_at.desc&limit=${PAGE}&offset=${offset}`,
+        { headers: { apikey: SUPABASE_KEY } }
+      );
+      const rows = await res.json();
+      if (!Array.isArray(rows)) throw new Error(rows?.message || 'Failed to load episodes');
+      // Newest first already; map to the shape the UI uses
+      const all = loaded.concat(rows.map(r => ({ title: r.title, cover: r.image, audio: r.audio_url, date: r.published_at })));
+      setEpisodes(all); // show the first page immediately
+      if (rows.length === PAGE) await loadPage(offset + PAGE, all);
+    };
+    loadPage(0, []).catch(err => console.error(err));
   }, []);
 
   useEffect(() => {
