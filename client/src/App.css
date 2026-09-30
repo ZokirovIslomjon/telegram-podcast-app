@@ -401,7 +401,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent-warm
   display: flex; flex-direction: column; align-items: center; text-align: center;
   animation: join-up 0.3s var(--ease);
 }
-.join-logo { width: 64px; height: 64px; border-radius: var(--radius-md); object-fit: cover; margin-bottom: var(--space-2); }
+.join-logo { height: 20px; width: auto; margin-bottom: var(--space-3); } /* wide wordmark: size by height, never crop */
 .join-title { margin: 0 0 var(--space-1); font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
 .join-text { margin: 0 0 var(--space-3); font-size: 14px; color: var(--text-sub); max-width: 320px; line-height: 1.5; }
 .join-btn {
