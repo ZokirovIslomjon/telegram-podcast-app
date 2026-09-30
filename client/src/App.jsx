@@ -170,7 +170,6 @@ function App() {
   const [userCoins, setUserCoins] = useState(0);
   const [userRank, setUserRank] = useState(0);
   const [leaderboard, setLeaderboard] = useState([]);
-  const [listeningTime, setListeningTime] = useState(0);
   const [isChannelMember, setIsChannelMember] = useState(null); // null = unknown (don't nag)
   const [showJoinPrompt, setShowJoinPrompt] = useState(false);
   const [lyrics, setLyrics] = useState(null); // null = loading/none, [] = not available
@@ -179,6 +178,8 @@ function App() {
   const [visibleCount, setVisibleCount] = useState(15);
   
   const audioRef = useRef(null);
+  const playedRef = useRef(0);      // seconds of real playback since the last coin heartbeat
+  const lastPosRef = useRef(null);  // last audio position seen, to measure real playback
   const lyricsBoxRef = useRef(null);
   const fileInputRef = useRef(null);
 
@@ -189,9 +190,6 @@ function App() {
       const data = JSON.parse(savedData);
       setFavorites(data.favorites || []);
       setProfileImage(data.profileImage || null);
-      setUserCoins(data.userCoins || 0);
-      setUserRank(data.userRank || 0);
-      setListeningTime(data.listeningTime || 0);
     }
   }, []);
 
@@ -200,13 +198,10 @@ function App() {
     const dataToSave = {
       favorites,
       profileImage,
-      userCoins,
-      userRank,
-      listeningTime,
       lastUpdated: new Date().toISOString()
     };
     localStorage.setItem('podcastAppData', JSON.stringify(dataToSave));
-  }, [favorites, profileImage, userCoins, userRank, listeningTime]);
+  }, [favorites, profileImage]);
 
   useEffect(() => {
     if (window.Telegram?.WebApp) {
@@ -234,6 +229,7 @@ function App() {
     })
       .then(res => res.json())
       .then(data => {
+        if (typeof data.coins === 'number') { setUserCoins(data.coins); setUserRank(data.rank); }
         if (typeof data.isMember !== 'boolean') return;
         setIsChannelMember(data.isMember);
         if (data.isMember) setShowJoinPrompt(false);
@@ -261,28 +257,19 @@ function App() {
     setShowJoinPrompt(false);
   };
 
-  // Fetch Global Leaderboard (CLOUD SYNC)
+  // Fetch Global Leaderboard (top 10 from Supabase) whenever the Profile tab opens
   useEffect(() => {
-     fetch('https://telegram-podcast-app.onrender.com/api/leaderboard')
-       .then(res => res.json())
-       .then(data => {
-          if (Array.isArray(data)) {
-             const formattedUsers = data.map((u, index) => ({
-                id: u.telegramId,
-                name: u.name,
-                coins: u.coins,
-                rank: index + 1
-             }));
-             setLeaderboard(formattedUsers);
-             
-             if (telegramUser) {
-                const myEntry = formattedUsers.find(u => u.id === telegramUser.id.toString());
-                if (myEntry) setUserRank(myEntry.rank);
-             }
-          }
-       })
-       .catch(err => console.error("Leaderboard fetch error:", err));
-  }, [activeTab, telegramUser]); 
+    if (activeTab !== 'profile') return;
+    fetch(`${SUPABASE_URL}/rest/v1/rpc/get_leaderboard`, { headers: { apikey: SUPABASE_KEY } })
+      .then(res => res.json())
+      .then(data => { if (Array.isArray(data)) setLeaderboard(data); })
+      .catch(err => console.error("Leaderboard fetch error:", err));
+  }, [activeTab]);
+
+  // Wake the Render server (Telegram bot) – the app no longer calls it for anything else
+  useEffect(() => {
+    fetch('https://telegram-podcast-app.onrender.com/health', { mode: 'no-cors' }).catch(() => {});
+  }, []);
 
   // FETCH EPISODES from Poddex DB (Supabase, always on). An hourly background job fills it from RSS.
   useEffect(() => {
@@ -309,49 +296,19 @@ function App() {
     return () => clearInterval(interval);
   }, []);
 
-  // Track listening time and award coins
-  useEffect(() => {
-    let interval;
-    if (isPlaying) {
-      interval = setInterval(() => {
-        setListeningTime(prev => {
-          const newTime = prev + 1;
-          // RULE: 2 Minutes (120 seconds) = 1 Coin
-          if (newTime > 0 && newTime % 120 === 0) {
-            setUserCoins(prevCoins => prevCoins + 1);
-            updateUserInLeaderboard(1);
-          }
-          return newTime;
-        });
-      }, 1000);
-    }
-    return () => clearInterval(interval);
-  }, [isPlaying]);
-
-  const updateUserInLeaderboard = (coinsToAdd) => {
-    const newTotal = userCoins + coinsToAdd;
-    let userId = telegramUser?.id?.toString();
-    let userName = telegramUser ? `${telegramUser.first_name}` : "Guest User";
-    let userUsername = telegramUser?.username || "guest";
-
-    if (!userId) {
-       userId = localStorage.getItem('guest_id') || `guest_${Math.floor(Math.random() * 10000)}`;
-       localStorage.setItem('guest_id', userId);
-       userName = "Guest Tester " + userId.slice(-4);
-    }
-
-    fetch('https://telegram-podcast-app.onrender.com/api/user/sync', {
-       method: 'POST',
-       headers: { 'Content-Type': 'application/json' },
-       body: JSON.stringify({
-          telegramId: userId,
-          name: userName,
-          username: userUsername,
-          coins: newTotal
-       })
-    }).then(res => res.json())
-      .then(data => console.log("✅ Leaderboard Updated:", data))
-      .catch(err => console.error("❌ Sync failed:", err));
+  // COINS: after every 30s of real playback, tell the server. The server credits the time
+  // (never faster than the clock) and gives 1 coin per 2 minutes. Telegram users only.
+  const sendListenHeartbeat = () => {
+    const initData = window.Telegram?.WebApp?.initData;
+    if (!initData) return;
+    fetch(`${SUPABASE_URL}/functions/v1/listen`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ initData })
+    })
+      .then(res => res.json())
+      .then(data => { if (typeof data.coins === 'number') { setUserCoins(data.coins); setUserRank(data.rank); } })
+      .catch(err => console.error('listen failed:', err));
   };
 
   const handlePlay = (episode) => {
@@ -387,10 +344,23 @@ function App() {
   };
 
   const handleTimeUpdate = () => {
-    if (audioRef.current) setCurrentTime(audioRef.current.currentTime);
+    const audio = audioRef.current;
+    if (!audio) return;
+    setCurrentTime(audio.currentTime);
+    // Count only normal playback: ignore seeks/skips (big jumps) and backwards moves
+    const step = audio.currentTime - (lastPosRef.current ?? audio.currentTime);
+    lastPosRef.current = audio.currentTime;
+    if (step > 0 && step < 1 + audio.playbackRate && !audio.paused) {
+      playedRef.current += step;
+      if (playedRef.current >= 30) {
+        playedRef.current -= 30;
+        sendListenHeartbeat();
+      }
+    }
   };
 
   const handleLoadedMetadata = () => {
+    lastPosRef.current = null; // new episode
     if (audioRef.current) setDuration(audioRef.current.duration);
     updatePositionState();
   };
@@ -781,7 +751,7 @@ function App() {
 
   // PROFILE TAB
   if (activeTab === 'profile') {
-    const sortedLeaderboard = [...leaderboard].sort((a, b) => b.coins - a.coins).slice(0, 10);
+    const inTelegram = Boolean(window.Telegram?.WebApp?.initData);
     return (
       <div className="app-container">
         <div className="profile-header">
@@ -807,19 +777,29 @@ function App() {
           </div>
           <div className="stat-card">
             <div className="stat-icon">🏆</div>
-            <div className="stat-number">#{userRank || 0}</div>
+            <div className="stat-number">{userRank ? `#${userRank}` : '—'}</div>
             <div className="stat-label">Rank</div>
           </div>
         </div>
 
-        <div className="section-title" style={{marginTop: '30px'}}>
+        <div className="coins-info">
+          <h3 className="coins-info-title">How coins work</h3>
+          <ul className="coins-info-list">
+            <li><span className="coins-info-icon">🎧</span><p>Listen to any episode. Every <b>2 minutes</b> of listening earns you <b>1 coin</b>.</p></li>
+            <li><span className="coins-info-icon">⏯️</span><p>Only real listening counts. Paused, loading or skipped time doesn't.</p></li>
+            <li><span className="coins-info-icon">🏆</span><p>The <b>top 10 listeners</b> appear on the leaderboard below. Keep listening to climb!</p></li>
+          </ul>
+          {!inTelegram && <p className="coins-info-note">Open Poddex from Telegram to start earning coins.</p>}
+        </div>
+
+        <div className="section-title">
           <span>Leaderboard</span><span className="see-all">Top Listeners</span>
         </div>
 
         <div className="leaderboard">
-          {sortedLeaderboard.length > 0 ? (
-            sortedLeaderboard.map((user, index) => (
-              <div key={user.id} className="leaderboard-item">
+          {leaderboard.length > 0 ? (
+            leaderboard.map((user, index) => (
+              <div key={user.rank} className="leaderboard-item">
                 <div className="leaderboard-left">
                   <div className="leaderboard-rank">#{index + 1}</div>
                   <div className="leaderboard-avatar">{index === 0 ? '🏆' : index === 1 ? '🥈' : index === 2 ? '🥉' : '👤'}</div>
@@ -829,7 +809,7 @@ function App() {
               </div>
             ))
           ) : (
-            <div className="empty-state"><div className="empty-icon">🏆</div><h3>No ranking yet</h3></div>
+            <div className="empty-state"><div className="empty-icon">🏆</div><h3>No ranking yet</h3><p>Be the first: play an episode to earn coins.</p></div>
           )}
         </div>
 

@@ -1,6 +1,5 @@
 const express = require('express');
 const cors = require('cors');
-const mongoose = require('mongoose');
 const { Telegraf } = require('telegraf');
 require('dotenv').config();
 
@@ -9,70 +8,15 @@ app.use(cors());
 app.use(express.json()); // Allows the server to read JSON data
 
 // ---------------------------------------------------------
-// 1. DATABASE CONNECTION (MongoDB Atlas)
-// ---------------------------------------------------------
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log('✅ Connected to MongoDB Atlas'))
-  .catch(err => console.error('❌ MongoDB Error:', err));
-
-// Define what a "User" looks like in the database
-const UserSchema = new mongoose.Schema({
-  telegramId: { type: String, required: true, unique: true },
-  name: String,
-  username: String,
-  coins: { type: Number, default: 0 },
-  lastActive: { type: Date, default: Date.now }
-});
-const User = mongoose.model('User', UserSchema);
-
-// ---------------------------------------------------------
-// 2. API ROUTES
-// (Episodes now come from the Poddex DB on Supabase, synced hourly by the sync-rss job)
+// 1. API ROUTES
+// Episodes, coins and the leaderboard now live in the Poddex DB on Supabase.
 // ---------------------------------------------------------
 
-// GET: Global Leaderboard (Top 50 Users)
-app.get('/api/leaderboard', async (req, res) => {
-    try {
-        // Find all users, sort by coins (highest first), take top 50
-        const topUsers = await User.find().sort({ coins: -1 }).limit(50);
-        res.json(topUsers);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-// POST: Sync User Coins (App calls this when you earn coins)
-app.post('/api/user/sync', async (req, res) => {
-    const { telegramId, name, username, coins } = req.body;
-    
-    // Safety check
-    if (!telegramId) return res.status(400).json({ error: "Missing Telegram ID" });
-
-    try {
-        // Try to find the user
-        let user = await User.findOne({ telegramId });
-
-        if (!user) {
-            // Create new user if they don't exist
-            user = new User({ telegramId, name, username, coins });
-        } else {
-            // Update existing user (only if new coin count is higher)
-            if (coins > user.coins) {
-                user.coins = coins;
-            }
-            user.name = name; // Update name in case they changed it
-            user.lastActive = Date.now();
-        }
-        
-        await user.save();
-        res.json({ success: true, user });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
+// GET: Health check – the mini app pings this on open so Render wakes up the bot
+app.get('/health', (req, res) => res.send('ok'));
 
 // ---------------------------------------------------------
-// 4. TELEGRAM BOT
+// 2. TELEGRAM BOT
 // ---------------------------------------------------------
 const bot = new Telegraf(process.env.BOT_TOKEN);
 bot.start((ctx) => {
