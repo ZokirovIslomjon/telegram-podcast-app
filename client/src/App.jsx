@@ -120,6 +120,7 @@ const Icons = {
 const SUPABASE_URL = 'https://uqphmtuqncddzsvjaxqu.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_PxlMl3gWmL_kT2kap6MOZw_Vq7FNuci';
 const CHANNEL_URL = 'https://t.me/Poddex_Podcast';
+const COVER_IMAGE = '/poddex%20cover.jpg'; // same cover for every episode (client/public/poddex cover.jpg)
 
 // Categories
 const CATEGORIES = [
@@ -288,13 +289,13 @@ function App() {
     const PAGE = 1000; // Supabase returns max 1000 rows per request
     const loadPage = async (offset, loaded) => {
       const res = await fetch(
-        `${SUPABASE_URL}/rest/v1/episodes?select=title,image,audio_url,published_at,transcript_url&order=published_at.desc&limit=${PAGE}&offset=${offset}`,
+        `${SUPABASE_URL}/rest/v1/episodes?select=title,audio_url,published_at,transcript_url&order=published_at.desc&limit=${PAGE}&offset=${offset}`,
         { headers: { apikey: SUPABASE_KEY } }
       );
       const rows = await res.json();
       if (!Array.isArray(rows)) throw new Error(rows?.message || 'Failed to load episodes');
       // Newest first already; map to the shape the UI uses
-      const all = loaded.concat(rows.map(r => ({ title: r.title, cover: r.image, audio: r.audio_url, date: r.published_at, transcript: r.transcript_url })));
+      const all = loaded.concat(rows.map(r => ({ title: r.title, cover: COVER_IMAGE, audio: r.audio_url, date: r.published_at, transcript: r.transcript_url })));
       setEpisodes(all); // show the first page immediately
       if (rows.length === PAGE) await loadPage(offset + PAGE, all);
     };
