@@ -10,7 +10,7 @@ The folder is the source of truth: renaming, deleting, editing .lrc or deleting 
 Usage:  pythonw make_lrc.py            (settings in config.json next to this file)
 Log:    make_lrc.log next to this file
 """
-import json, logging, pathlib, time
+import json, logging, pathlib, subprocess, time
 from datetime import datetime, timezone
 from urllib.parse import quote
 
@@ -27,6 +27,17 @@ logging.basicConfig(filename=HERE / "make_lrc.log", level=logging.INFO,
                     format="%(asctime)s %(message)s", encoding="utf-8")
 log = logging.info
 
+def mp3_duration(mp3):
+    """Length in whole seconds via ffprobe (installed with ffmpeg); None if it can't be read."""
+    try:
+        out = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration",
+                              "-of", "default=noprint_wrappers=1:nokey=1", str(mp3)],
+                             capture_output=True, text=True, timeout=60,
+                             creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+        return round(float(out.stdout.strip()))
+    except Exception:
+        return None
+
 # --- Supabase (service role key: this script is the only writer) ---
 DB = CFG["supabase_url"].rstrip("/") + "/rest/v1/episodes"
 HEADERS = {"apikey": CFG["supabase_service_key"],
@@ -35,7 +46,7 @@ HEADERS = {"apikey": CFG["supabase_service_key"],
 
 def db_rows():
     r = requests.get(DB, headers=HEADERS, timeout=30, params={
-        "podcast_id": f"eq.{PODCAST_ID}", "select": "guid,lyrics_status,lyrics_lrc"})
+        "podcast_id": f"eq.{PODCAST_ID}", "select": "guid,lyrics_status,lyrics_lrc,duration_seconds"})
     r.raise_for_status()
     return {row["guid"]: row for row in r.json()}
 
@@ -45,7 +56,7 @@ def db_insert(mp3):
                       params={"on_conflict": "guid"}, timeout=30, json={
         "podcast_id": PODCAST_ID, "guid": mp3.name, "title": mp3.stem,
         "audio_url": CFG["r2_public_url"].rstrip("/") + "/" + quote(mp3.name),
-        "published_at": added, "lyrics_status": "pending"})
+        "published_at": added, "lyrics_status": "pending", "duration_seconds": mp3_duration(mp3)})
     r.raise_for_status()
 
 def db_update(guid, fields):
@@ -96,7 +107,7 @@ def check_once():
             log(f"Uploading: {name}")
             r2_upload(mp3)
             db_insert(mp3)
-            rows[name] = {"guid": name, "lyrics_status": "pending", "lyrics_lrc": None}
+            rows[name] = {"guid": name, "lyrics_status": "pending", "lyrics_lrc": None, "duration_seconds": 0}
 
     # 2. lyrics state on disk -> Supabase (covers new .lrc, edited .lrc, .failed, deleted .failed)
     for name, mp3 in local.items():
@@ -112,6 +123,11 @@ def check_once():
         if rows[name]["lyrics_status"] != status or rows[name]["lyrics_lrc"] != text:
             db_update(name, {"lyrics_status": status, "lyrics_lrc": text})
             log(f"Lyrics {status}: {name}")
+        if rows[name].get("duration_seconds") is None:  # episodes added before durations existed
+            seconds = mp3_duration(mp3)
+            if seconds:
+                db_update(name, {"duration_seconds": seconds})
+                log(f"Duration {seconds}s: {name}")
 
     # 3. removed mp3 -> remove from the app (never when the folder is empty: protects against a wrong path)
     if local:

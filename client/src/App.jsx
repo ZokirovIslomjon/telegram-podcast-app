@@ -295,13 +295,13 @@ function App() {
     const PAGE = 1000; // Supabase returns max 1000 rows per request
     const loadPage = async (offset, loaded) => {
       const res = await fetch(
-        `${SUPABASE_URL}/rest/v1/episodes?select=guid,title,audio_url,published_at,lyrics_status,transcript_url&order=published_at.desc&limit=${PAGE}&offset=${offset}`,
+        `${SUPABASE_URL}/rest/v1/episodes?select=guid,title,audio_url,published_at,lyrics_status,transcript_url,duration_seconds&order=published_at.desc&limit=${PAGE}&offset=${offset}`,
         { headers: { apikey: SUPABASE_KEY } }
       );
       const rows = await res.json();
       if (!Array.isArray(rows)) throw new Error(rows?.message || 'Failed to load episodes');
       // Newest first already; map to the shape the UI uses
-      const all = loaded.concat(rows.map(r => ({ guid: r.guid, title: r.title, cover: COVER_IMAGE, audio: r.audio_url, date: r.published_at, lyricsStatus: r.lyrics_status, transcript: r.transcript_url })));
+      const all = loaded.concat(rows.map(r => ({ guid: r.guid, title: r.title, cover: COVER_IMAGE, audio: r.audio_url, date: r.published_at, lyricsStatus: r.lyrics_status, transcript: r.transcript_url, duration: r.duration_seconds })));
       setEpisodes(all); // show the first page immediately
       if (rows.length === PAGE) await loadPage(offset + PAGE, all);
       else setEpisodesLoaded(true);
@@ -401,6 +401,13 @@ function App() {
   };
 
   // Date Formatter
+  // Episode length for the list: "35m", "1h 12m" (nothing if unknown)
+  const formatDuration = (seconds) => {
+    if (!seconds) return '';
+    const minutes = Math.max(1, Math.round(seconds / 60));
+    return minutes < 60 ? `${minutes}m` : `${Math.floor(minutes / 60)}h ${minutes % 60}m`;
+  };
+
   const formatDate = (dateString) => {
     const options = { year: 'numeric', month: 'short', day: 'numeric' };
     return new Date(dateString).toLocaleDateString(undefined, options);
@@ -682,7 +689,7 @@ function App() {
                     <h3 className="card-title">{ep.title}</h3>
                     <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
                        <p className="card-sub">{formatDate(ep.date)}</p>
-                       <p className="card-sub">35m</p>
+                       <p className="card-sub">{formatDuration(ep.duration)}</p>
                     </div>
                   </div>
                   <div className="play-icon-small"><Icons.Play /></div>
@@ -931,7 +938,7 @@ function App() {
               <h3 className="card-title">{ep.title}</h3>
               <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
                  <p className="card-sub">{formatDate(ep.date)}</p>
-                 <p className="card-sub">35m</p>
+                 <p className="card-sub">{formatDuration(ep.duration)}</p>
               </div>
             </div>
             <div className="play-icon-small"><Icons.Play /></div>
