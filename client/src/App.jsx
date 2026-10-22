@@ -233,6 +233,7 @@ function App() {
         if (typeof data.isMember !== 'boolean') return;
         setIsChannelMember(data.isMember);
         if (data.isMember) setShowJoinPrompt(false);
+        else { audioRef.current?.pause(); setShowJoinPrompt(true); } // must follow the channel to listen
       })
       .catch(err => console.error('app-open failed:', err));
   };
@@ -312,7 +313,7 @@ function App() {
   };
 
   const handlePlay = (episode) => {
-    if (isChannelMember === false) setShowJoinPrompt(true);
+    if (isChannelMember === false) { setShowJoinPrompt(true); return; } // must follow the channel to listen
     setCurrentEpisode(episode);
     if (episode.audio === lastPlayedEpisode?.audio) audioRef.current?.play();
     else setLastPlayedEpisode(episode); // new src + autoPlay starts it
@@ -951,7 +952,11 @@ function App() {
           ref={audioRef}
           src={lastPlayedEpisode.audio}
           autoPlay
-          onPlay={() => { setIsPlaying(true); updatePositionState(); }}
+          onPlay={() => {
+            // Safety net for every other way playback can start (mini player, lock screen, autoplay)
+            if (isChannelMember === false) { audioRef.current.pause(); setShowJoinPrompt(true); return; }
+            setIsPlaying(true); updatePositionState();
+          }}
           onPause={() => setIsPlaying(false)}
           onEnded={() => setIsPlaying(false)}
           onSeeked={updatePositionState}
@@ -963,8 +968,8 @@ function App() {
         <div className="join-backdrop" onClick={() => setShowJoinPrompt(false)}>
           <div className="join-sheet" onClick={(e) => e.stopPropagation()}>
             <img src="/logo.png" alt="" className="join-logo" />
-            <h3 className="join-title">Join Poddex on Telegram</h3>
-            <p className="join-text">Get new episodes and updates first. Your podcast keeps playing while you join.</p>
+            <h3 className="join-title">Follow Poddex to listen</h3>
+            <p className="join-text">Join our Telegram channel to listen to episodes. It's free, takes one tap, and you'll get new episodes first.</p>
             <button className="join-btn" onClick={joinChannel}>Join channel</button>
             <button className="join-later" onClick={() => setShowJoinPrompt(false)}>Later</button>
           </div>
