@@ -152,6 +152,15 @@ const BANNERS = [
   }
 ];
 
+// Leaderboard photo: Telegram profile photo, or the first letter of the name if there is none / it fails to load
+function LeaderboardAvatar({ name, photoUrl }) {
+  const [failed, setFailed] = useState(false);
+  if (photoUrl && !failed) {
+    return <img src={photoUrl} alt="" className="leaderboard-avatar" referrerPolicy="no-referrer" onError={() => setFailed(true)} />;
+  }
+  return <div className="leaderboard-avatar leaderboard-avatar-initial">{(name || '?').trim().charAt(0).toUpperCase()}</div>;
+}
+
 function App() {
   const [episodes, setEpisodes] = useState([]);
   const [currentEpisode, setCurrentEpisode] = useState(null);
@@ -261,7 +270,7 @@ function App() {
   // Fetch Global Leaderboard (top 10 from Supabase) whenever the Profile tab opens
   useEffect(() => {
     if (activeTab !== 'profile') return;
-    fetch(`${SUPABASE_URL}/rest/v1/rpc/get_leaderboard`, { headers: { apikey: SUPABASE_KEY } })
+    fetch(`${SUPABASE_URL}/rest/v1/rpc/get_leaderboard_with_photos`, { headers: { apikey: SUPABASE_KEY } })
       .then(res => res.json())
       .then(data => { if (Array.isArray(data)) setLeaderboard(data); })
       .catch(err => console.error("Leaderboard fetch error:", err));
@@ -799,11 +808,11 @@ function App() {
 
         <div className="leaderboard">
           {leaderboard.length > 0 ? (
-            leaderboard.map((user, index) => (
-              <div key={user.rank} className="leaderboard-item">
+            leaderboard.map((user) => (
+              <div key={`${user.rank}-${user.name}`} className="leaderboard-item">
                 <div className="leaderboard-left">
-                  <div className="leaderboard-rank">#{index + 1}</div>
-                  <div className="leaderboard-avatar">{index === 0 ? '🏆' : index === 1 ? '🥈' : index === 2 ? '🥉' : '👤'}</div>
+                  <div className="leaderboard-rank">#{user.rank}</div>
+                  <LeaderboardAvatar name={user.name} photoUrl={user.photo_url} />
                   <div className="leaderboard-name">{user.name}</div>
                 </div>
                 <div className="leaderboard-coins">{user.coins} coins</div>
