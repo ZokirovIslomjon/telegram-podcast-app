@@ -1,0 +1,14 @@
+{
+  "podcasts_folder": "C:\\Users\\Zokirov\\telegram-podcast\\podcasts",
+  "whisper_model": "base.en",
+
+  "supabase_url": "https://uqphmtuqncddzsvjaxqu.supabase.co",
+  "supabase_service_key": "PASTE the service_role key (Supabase > Settings > API Keys > Legacy tab)",
+  "podcast_id": 2,
+
+  "r2_account_id": "PASTE your Cloudflare account ID",
+  "r2_access_key_id": "PASTE R2 API token Access Key ID",
+  "r2_secret_access_key": "PASTE R2 API token Secret Access Key",
+  "r2_bucket": "poddex",
+  "r2_public_url": "PASTE the bucket's public URL, e.g. https://pub-xxxxxxxx.r2.dev"
+}

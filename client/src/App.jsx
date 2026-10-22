@@ -122,6 +122,14 @@ const SUPABASE_KEY = 'sb_publishable_PxlMl3gWmL_kT2kap6MOZw_Vq7FNuci';
 const CHANNEL_URL = 'https://t.me/Poddex_Podcast';
 const COVER_IMAGE = '/poddex%20cover.jpg'; // same cover for every episode (client/public/poddex cover.jpg)
 
+// "[mm:ss.xx] text" lines -> [{ time, text }]
+function parseLrc(text) {
+  return text.split("\n").map(line => {
+    const m = line.match(/\[(\d+):(\d+(?:\.\d+)?)\](.*)/);
+    return m && { time: +m[1] * 60 + +m[2], text: m[3].trim() };
+  }).filter(Boolean);
+}
+
 // Categories
 const CATEGORIES = [
   { name: "Gaming", icon: "🎮" },
@@ -181,7 +189,8 @@ function App() {
   const [leaderboard, setLeaderboard] = useState([]);
   const [isChannelMember, setIsChannelMember] = useState(null); // null = unknown (don't nag)
   const [showJoinPrompt, setShowJoinPrompt] = useState(false);
-  const [lyrics, setLyrics] = useState(null); // null = loading/none, [] = not available
+  const [lyrics, setLyrics] = useState(null); // null = not loaded yet, [{ time, text }] = ready
+  const [episodesLoaded, setEpisodesLoaded] = useState(false);
   
   // NEW: PAGINATION STATE
   const [visibleCount, setVisibleCount] = useState(15);
@@ -281,20 +290,21 @@ function App() {
     fetch('https://telegram-podcast-app.onrender.com/health', { mode: 'no-cors' }).catch(() => {});
   }, []);
 
-  // FETCH EPISODES from Poddex DB (Supabase, always on). An hourly background job fills it from RSS.
+  // FETCH EPISODES from Poddex DB (Supabase, always on): Changelog (hourly RSS job) + David's own mp3s (pc-tools/make_lrc.py).
   useEffect(() => {
     const PAGE = 1000; // Supabase returns max 1000 rows per request
     const loadPage = async (offset, loaded) => {
       const res = await fetch(
-        `${SUPABASE_URL}/rest/v1/episodes?select=title,audio_url,published_at,transcript_url&order=published_at.desc&limit=${PAGE}&offset=${offset}`,
+        `${SUPABASE_URL}/rest/v1/episodes?select=guid,title,audio_url,published_at,lyrics_status,transcript_url&order=published_at.desc&limit=${PAGE}&offset=${offset}`,
         { headers: { apikey: SUPABASE_KEY } }
       );
       const rows = await res.json();
       if (!Array.isArray(rows)) throw new Error(rows?.message || 'Failed to load episodes');
       // Newest first already; map to the shape the UI uses
-      const all = loaded.concat(rows.map(r => ({ title: r.title, cover: COVER_IMAGE, audio: r.audio_url, date: r.published_at, transcript: r.transcript_url })));
+      const all = loaded.concat(rows.map(r => ({ guid: r.guid, title: r.title, cover: COVER_IMAGE, audio: r.audio_url, date: r.published_at, lyricsStatus: r.lyrics_status, transcript: r.transcript_url })));
       setEpisodes(all); // show the first page immediately
       if (rows.length === PAGE) await loadPage(offset + PAGE, all);
+      else setEpisodesLoaded(true);
     };
     loadPage(0, []).catch(err => console.error(err));
   }, []);
@@ -487,23 +497,35 @@ function App() {
     setVisibleCount(prev => prev + 15);
   };
 
-  // LYRICS: load the episode's transcript
+  // LYRICS for the playing episode:
+  //  - David's own episodes (have lyricsStatus): Whisper .lrc from the DB, exact time per line
+  //  - Changelog episodes: their transcript page via the `transcript` function, timed from [mm:ss] markers
   useEffect(() => {
     setLyrics(null);
-    const url = lastPlayedEpisode?.transcript;
-    if (!url) return;
+    const ep = lastPlayedEpisode;
+    let request;
+    if (ep?.lyricsStatus === 'ready') {
+      request = fetch(`${SUPABASE_URL}/rest/v1/episodes?select=lyrics_lrc&guid=eq.${encodeURIComponent(ep.guid)}`, { headers: { apikey: SUPABASE_KEY } })
+        .then(res => res.json())
+        .then(rows => parseLrc(rows?.[0]?.lyrics_lrc || ''));
+    } else if (!ep?.lyricsStatus && ep?.transcript) {
+      request = fetch(`${SUPABASE_URL}/functions/v1/transcript?url=${encodeURIComponent(ep.transcript)}`)
+        .then(res => res.json())
+        .then(data => (Array.isArray(data.lines) ? data.lines : []));
+    } else return;
     let cancelled = false;
-    fetch(`${SUPABASE_URL}/functions/v1/transcript?url=${encodeURIComponent(url)}`)
-      .then(res => res.json())
-      .then(data => { if (!cancelled) setLyrics(Array.isArray(data.lines) ? data.lines : []); })
+    request
+      .then(lines => { if (!cancelled) setLyrics(lines); })
       .catch(() => { if (!cancelled) setLyrics([]); });
     return () => { cancelled = true; };
   }, [lastPlayedEpisode]);
 
-  // Give each line a start time: exact where the transcript has a [mm:ss] marker,
-  // in between spread by text length up to the next marker (or the end of the episode).
+  // Start time of each line. .lrc lines have their own time. Changelog lines are exact where the
+  // transcript has a [mm:ss] marker, and in between spread by text length up to the next marker (or the end).
   const lyricTimes = useMemo(() => {
-    if (!lyrics?.length || !duration) return [];
+    if (!lyrics?.length) return [];
+    if (lyrics[0].time !== undefined) return lyrics.map(l => l.time);
+    if (!duration) return [];
     const anchors = [{ i: 0, t: 0 }];
     lyrics.forEach((line, i) => {
       const last = anchors[anchors.length - 1];
@@ -543,7 +565,7 @@ function App() {
       <div className="player-overlay">
         <div className="player-bg" style={{ backgroundImage: `url(${currentEpisode.cover})` }} />
 
-        <div className={`player-main ${currentEpisode.transcript ? 'has-lyrics' : ''}`}>
+        <div className={`player-main ${currentEpisode.lyricsStatus || currentEpisode.transcript ? 'has-lyrics' : ''}`}>
         <div className="player-header">
           <button className="icon-btn" onClick={closePlayer} aria-label="Close player">
             <Icons.ChevronDown />
@@ -597,11 +619,12 @@ function App() {
         </div>
         </div>
 
-        {currentEpisode.transcript && (
+        {(currentEpisode.lyricsStatus || currentEpisode.transcript) && (
           <div className="lyrics-card">
             <div className="lyrics-title">Lyrics</div>
-            {lyrics === null && <p className="lyrics-empty">Loading lyrics…</p>}
-            {lyrics?.length === 0 && <p className="lyrics-empty">Lyrics aren't available for this episode.</p>}
+            {currentEpisode.lyricsStatus === 'pending' && <p className="lyrics-empty">Lyrics coming soon</p>}
+            {(currentEpisode.lyricsStatus === 'failed' || lyrics?.length === 0) && <p className="lyrics-empty">Lyrics not available</p>}
+            {lyrics === null && (currentEpisode.lyricsStatus === 'ready' || (!currentEpisode.lyricsStatus && currentEpisode.transcript)) && <p className="lyrics-empty">Loading lyrics…</p>}
             {lyrics?.length > 0 && (
               <div className="lyrics-box" ref={lyricsBoxRef}>
                 {lyrics.map((line, i) => (
@@ -923,7 +946,7 @@ function App() {
         )}
 
         {displayedEpisodes.length === 0 && episodes.length === 0 && (
-          <p style={{textAlign:'center', color:'#999', padding: '40px 20px'}}>Loading awesome episodes...</p>
+          <p style={{textAlign:'center', color:'#999', padding: '40px 20px'}}>{episodesLoaded ? 'No episodes yet. New podcasts are coming soon!' : 'Loading awesome episodes...'}</p>
         )}
       </div>
 

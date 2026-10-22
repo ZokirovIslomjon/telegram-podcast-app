@@ -1,1 +1,4 @@
 node_modules/
+pc-tools/config.json
+pc-tools/make_lrc.log
+podcasts/
