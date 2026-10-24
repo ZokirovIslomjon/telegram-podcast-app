@@ -108,6 +108,13 @@ const Icons = {
       <path d="M21 13v2a4 4 0 0 1-4 4H3"/>
     </svg>
   ),
+  Share: () => (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"/>
+      <polyline points="16 6 12 2 8 6"/>
+      <line x1="12" y1="2" x2="12" y2="15"/>
+    </svg>
+  ),
   Camera: () => (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
@@ -196,6 +203,7 @@ function App() {
   const [visibleCount, setVisibleCount] = useState(15);
   
   const audioRef = useRef(null);
+  const deepLinkHandled = useRef(false);
   const playedRef = useRef(0);      // seconds of real playback since the last coin heartbeat
   const lastPosRef = useRef(null);  // last audio position seen, to measure real playback
   const lyricsBoxRef = useRef(null);
@@ -295,13 +303,13 @@ function App() {
     const PAGE = 1000; // Supabase returns max 1000 rows per request
     const loadPage = async (offset, loaded) => {
       const res = await fetch(
-        `${SUPABASE_URL}/rest/v1/episodes?select=guid,title,audio_url,published_at,lyrics_status,transcript_url,duration_seconds&order=published_at.desc&limit=${PAGE}&offset=${offset}`,
+        `${SUPABASE_URL}/rest/v1/episodes?select=id,guid,title,audio_url,published_at,lyrics_status,transcript_url,duration_seconds&order=published_at.desc&limit=${PAGE}&offset=${offset}`,
         { headers: { apikey: SUPABASE_KEY } }
       );
       const rows = await res.json();
       if (!Array.isArray(rows)) throw new Error(rows?.message || 'Failed to load episodes');
       // Newest first already; map to the shape the UI uses
-      const all = loaded.concat(rows.map(r => ({ guid: r.guid, title: r.title, cover: COVER_IMAGE, audio: r.audio_url, date: r.published_at, lyricsStatus: r.lyrics_status, transcript: r.transcript_url, duration: r.duration_seconds })));
+      const all = loaded.concat(rows.map(r => ({ id: r.id, guid: r.guid, title: r.title, cover: COVER_IMAGE, audio: r.audio_url, date: r.published_at, lyricsStatus: r.lyrics_status, transcript: r.transcript_url, duration: r.duration_seconds })));
       setEpisodes(all); // show the first page immediately
       if (rows.length === PAGE) await loadPage(offset + PAGE, all);
       else setEpisodesLoaded(true);
@@ -330,6 +338,48 @@ function App() {
       .then(data => { if (typeof data.coins === 'number') { setUserCoins(data.coins); setUserRank(data.rank); } })
       .catch(err => console.error('listen failed:', err));
   };
+
+  // SHARE: Telegram share window with a prepared message (cover + title + "Listen on Poddex" button).
+  // The link carries the sharer's id; when a friend opens it and joins the channel, the sharer gets
+  // +10 coins (checked on the server in app-open, max 10 friends).
+  const shareEpisode = async (episode) => {
+    const tg = window.Telegram?.WebApp;
+    const myId = tg?.initDataUnsafe?.user?.id;
+    const link = `https://t.me/Poddexbot?startapp=ep_${episode.id}${myId ? `_r_${myId}` : ''}`;
+
+    if (!tg?.initData || !tg.isVersionAtLeast?.('8.0') || !tg.shareMessage) {
+      // Old Telegram / outside Telegram: plain share link
+      const url = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent('🎧 ' + episode.title)}`;
+      if (tg?.openTelegramLink) tg.openTelegramLink(url); else window.open(url, '_blank');
+      return;
+    }
+    try {
+      const prepared = await fetch(`${SUPABASE_URL}/functions/v1/share`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'prepare', initData: tg.initData, episodeId: episode.id })
+      }).then(res => res.json());
+      if (!prepared.id) throw new Error(prepared.error || 'prepare failed');
+      tg.shareMessage(prepared.id);
+    } catch (err) {
+      console.error('Share failed:', err);
+    }
+  };
+
+  // Shared link (t.me/Poddexbot?startapp=ep_<id>_r_<sharer>) opens that episode.
+  // Non-members see the join popup first; the episode opens once they have joined.
+  useEffect(() => {
+    if (deepLinkHandled.current) return;
+    const param = window.Telegram?.WebApp?.initDataUnsafe?.start_param || '';
+    const episodeId = param.match(/^ep_(\d+)/)?.[1];
+    if (!episodeId) { deepLinkHandled.current = true; return; }
+    const episode = episodes.find(ep => String(ep.id) === episodeId);
+    if (episode) {
+      if (isChannelMember === false) { setShowJoinPrompt(true); return; } // try again after joining
+      deepLinkHandled.current = true;
+      handlePlay(episode);
+    } else if (episodesLoaded) deepLinkHandled.current = true; // not found (e.g. removed)
+  }, [episodes, episodesLoaded, isChannelMember]);
 
   const handlePlay = (episode) => {
     if (isChannelMember === false) { setShowJoinPrompt(true); return; } // must follow the channel to listen
@@ -581,7 +631,9 @@ function App() {
             <span className="player-header-label">Playing from podcast</span>
             <span className="now-playing-text">Innovision Radio</span>
           </div>
-          <span className="icon-btn-spacer" />
+          <button className="icon-btn" onClick={() => shareEpisode(currentEpisode)} aria-label="Share episode">
+            <Icons.Share />
+          </button>
         </div>
 
         <div className="album-art-wrap">
@@ -827,6 +879,7 @@ function App() {
           <ul className="coins-info-list">
             <li><span className="coins-info-icon">🎧</span><p>Listen to any episode. Every <b>2 minutes</b> of listening earns you <b>1 coin</b>.</p></li>
             <li><span className="coins-info-icon">⏯️</span><p>Only real listening counts. Paused, loading or skipped time doesn't.</p></li>
+            <li><span className="coins-info-icon">📤</span><p>Invite friends: share an episode (the <b>share button</b> in the player). When a friend opens it and <b>joins our channel</b>, you get <b>10 coins</b>. Up to <b>10 friends</b>.</p></li>
             <li><span className="coins-info-icon">🏆</span><p>The <b>top 10 listeners</b> appear on the leaderboard below. Keep listening to climb!</p></li>
           </ul>
           {!inTelegram && <p className="coins-info-note">Open Poddex from Telegram to start earning coins.</p>}

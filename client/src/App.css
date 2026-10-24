@@ -78,7 +78,6 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent-warm
   transition: background 0.2s var(--ease), transform 0.2s var(--ease);
 }
 .icon-btn:active { background: rgba(255, 255, 255, 0.08); transform: scale(0.94); }
-.icon-btn-spacer { width: 40px; flex-shrink: 0; }
 .clear-filter-btn {
   padding: var(--space-1) var(--space-2); border-radius: 999px; font-size: 12px; font-weight: 700;
   border: 1px solid var(--glass-border); background: var(--glass); color: var(--text);
