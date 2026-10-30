@@ -200,6 +200,7 @@ function App() {
   const [premiumUntil, setPremiumUntil] = useState(null); // Premium (lyrics) end date, null = no Premium
   const [showPremium, setShowPremium] = useState(false);
   const [premiumBusy, setPremiumBusy] = useState(false);
+  const [coinsInfoOpen, setCoinsInfoOpen] = useState(false); // Profile: "How coins work" Read more
   const [episodesLoaded, setEpisodesLoaded] = useState(false);
   
   // NEW: PAGINATION STATE
@@ -912,8 +913,10 @@ function App() {
             <button className="profile-camera-btn" onClick={() => fileInputRef.current?.click()}><Icons.Camera /></button>
             <input ref={fileInputRef} type="file" accept="image/*" style={{display: 'none'}} onChange={handleImageUpload}/>
           </div>
-          <h2 className="profile-name-center">{telegramUser ? `${telegramUser.first_name} ${telegramUser.last_name || ''}`.trim() : 'Guest User'}</h2>
-          <p className="profile-username-center">{telegramUser?.username ? `@${telegramUser.username}` : 'Telegram User'}</p>
+          <div className="profile-identity">
+            <h2 className="profile-name-center">{telegramUser ? `${telegramUser.first_name} ${telegramUser.last_name || ''}`.trim() : 'Guest User'}</h2>
+            <p className="profile-username-center">{telegramUser?.username ? `@${telegramUser.username}` : 'Telegram User'}</p>
+          </div>
         </div>
 
         <div className="profile-stats-3col">
@@ -950,10 +953,13 @@ function App() {
           <ul className="coins-info-list">
             <li><span className="coins-info-icon">🎧</span><p>Listen to any episode. Every <b>2 minutes</b> of listening earns you <b>1 coin</b>.</p></li>
             <li><span className="coins-info-icon">⏯️</span><p>Only real listening counts. Paused, loading or skipped time doesn't.</p></li>
+            {coinsInfoOpen && <>
             <li><span className="coins-info-icon">📤</span><p>Invite friends: share an episode (the <b>share button</b> in the player). When <b>10 friends</b> open it and <b>start @Poddexbot</b>, you get <b>100 coins</b>. Every friend who joins is saved; the coins appear once your 10th friend joins.</p></li>
             <li><span className="coins-info-icon">⭐</span><p>Spend <b>100 coins</b> on <b>30 days of Premium</b> (lyrics). Spent coins leave your score.</p></li>
             <li><span className="coins-info-icon">🏆</span><p>The <b>top 10 listeners</b> appear on the leaderboard below. Keep listening to climb!</p></li>
+            </>}
           </ul>
+          <button className="coins-info-more" onClick={() => setCoinsInfoOpen(open => !open)}>{coinsInfoOpen ? 'Show less' : 'Read more'}</button>
           {!inTelegram && <p className="coins-info-note">Open Poddex from Telegram to start earning coins.</p>}
         </div>
 
