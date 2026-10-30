@@ -97,6 +97,8 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent-warm
   background: linear-gradient(120deg, rgba(42, 12, 18, 0.85) 0%, rgba(42, 12, 18, 0.35) 55%, rgba(240, 68, 50, 0.25) 100%);
 }
 .banner-text, .banner-icon { position: relative; z-index: 1; }
+.banner-image-only { align-items: flex-end; padding-bottom: 18px; } /* text is in the picture; button sits under it */
+.banner-image-only::after { display: none; }
 .banner-text h2 { margin: 0 0 var(--space-1); font-size: 22px; line-height: 1.15; font-weight: 800; letter-spacing: -0.5px; }
 .banner-text p { margin: 0 0 var(--space-2); font-size: 13px; color: rgba(255, 255, 255, 0.8); }
 .banner-icon { font-size: 44px; }

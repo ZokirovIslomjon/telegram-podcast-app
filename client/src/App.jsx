@@ -152,10 +152,12 @@ const CATEGORIES = [
 // Banners
 const BANNERS = [
   {
-    title: "Listen Favourite",
-    subtitle: "Podcast",
-    description: "Enjoy premium sound",
-    image: "https://images.unsplash.com/photo-1478737270239-2f02b77fc618?w=800&h=400&fit=crop",
+    title: "Want to See Lyrics?",
+    subtitle: "Unlock Premium!",
+    description: "",
+    premium: true, // button opens the Premium popup instead of playing
+    imageOnly: true, // banner1.jpg already has the text: no text, tint or icon on top
+    image: "/banner1.jpg",
     gradient: "linear-gradient(135deg, rgba(139, 122, 240, 0.9) 0%, rgba(108, 93, 211, 0.9) 100%)"
   },
   {
@@ -1028,13 +1030,20 @@ function App() {
       )}
 
       <div className="banner-container">
-        <div className="banner" style={{backgroundImage: `${BANNERS[currentBannerIndex].gradient}, url(${BANNERS[currentBannerIndex].image})`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundBlendMode: 'overlay'}}>
+        <div
+          className={`banner ${BANNERS[currentBannerIndex].imageOnly ? 'banner-image-only' : ''}`}
+          aria-label={`${BANNERS[currentBannerIndex].title} ${BANNERS[currentBannerIndex].subtitle}`}
+          style={BANNERS[currentBannerIndex].imageOnly
+            ? {backgroundImage: `url(${BANNERS[currentBannerIndex].image})`, backgroundSize: 'cover', backgroundPosition: 'center'}
+            : {backgroundImage: `${BANNERS[currentBannerIndex].gradient}, url(${BANNERS[currentBannerIndex].image})`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundBlendMode: 'overlay'}}>
           <div className="banner-text">
-            <h2>{BANNERS[currentBannerIndex].title}<br/>{BANNERS[currentBannerIndex].subtitle}</h2>
-            <p>{BANNERS[currentBannerIndex].description}</p>
-            <button className="play-now-btn" onClick={handleBannerPlayNow}>Play Now</button>
+            {!BANNERS[currentBannerIndex].imageOnly && <h2>{BANNERS[currentBannerIndex].title}<br/>{BANNERS[currentBannerIndex].subtitle}</h2>}
+            {BANNERS[currentBannerIndex].description && <p>{BANNERS[currentBannerIndex].description}</p>}
+            {BANNERS[currentBannerIndex].premium
+              ? <button className="play-now-btn" onClick={() => setShowPremium(true)}>⭐ Premium</button>
+              : <button className="play-now-btn" onClick={handleBannerPlayNow}>Play Now</button>}
           </div>
-          <div className="banner-icon">🎧</div> 
+          {!BANNERS[currentBannerIndex].imageOnly && <div className="banner-icon">🎧</div>}
         </div>
         <div className="banner-indicators">
           {BANNERS.map((_, idx) => <div key={idx} className={`indicator ${currentBannerIndex === idx ? 'active' : ''}`} />)}
