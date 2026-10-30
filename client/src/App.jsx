@@ -126,7 +126,7 @@ const Icons = {
 // Poddex DB (Supabase) – publishable key is safe to ship in the app (read-only via RLS)
 const SUPABASE_URL = 'https://uqphmtuqncddzsvjaxqu.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_PxlMl3gWmL_kT2kap6MOZw_Vq7FNuci';
-const CHANNEL_URL = 'https://t.me/Poddex_Podcast';
+const BOT_URL = 'https://t.me/Poddexbot';
 const COVER_IMAGE = '/poddex%20cover.jpg'; // same cover for every episode (client/public/poddex cover.jpg)
 
 // "[mm:ss.xx] text" lines -> [{ time, text }]
@@ -243,7 +243,7 @@ function App() {
     }
   }, []);
 
-  // Record today's visit (DAU/WAU/MAU) and check if the user joined our channel.
+  // Record today's visit (DAU/WAU/MAU) and check if the user has started our bot (pressed Start).
   // Runs on open and again whenever the user comes back to the app (e.g. after joining).
   const checkChannelMembership = () => {
     const initData = window.Telegram?.WebApp?.initData;
@@ -259,7 +259,7 @@ function App() {
         if (typeof data.isMember !== 'boolean') return;
         setIsChannelMember(data.isMember);
         if (data.isMember) setShowJoinPrompt(false);
-        else { audioRef.current?.pause(); setShowJoinPrompt(true); } // must follow the channel to listen
+        else { audioRef.current?.pause(); setShowJoinPrompt(true); } // must start the bot to listen
       })
       .catch(err => console.error('app-open failed:', err));
   };
@@ -278,9 +278,9 @@ function App() {
 
   const joinChannel = () => {
     const tg = window.Telegram?.WebApp;
-    // Opens the channel inside Telegram; the mini app stays open (minimized) and audio keeps playing
-    if (tg?.openTelegramLink) tg.openTelegramLink(CHANNEL_URL);
-    else window.open(CHANNEL_URL, '_blank');
+    // Opens the bot chat inside Telegram; the mini app stays open (minimized). After Start, coming back re-checks.
+    if (tg?.openTelegramLink) tg.openTelegramLink(BOT_URL);
+    else window.open(BOT_URL, '_blank');
     setShowJoinPrompt(false);
   };
 
@@ -340,7 +340,7 @@ function App() {
   };
 
   // SHARE: Telegram share window with a prepared message (cover + title + "Listen on Poddex" button).
-  // The link carries the sharer's id; when a friend opens it and joins the channel, the sharer gets
+  // The link carries the sharer's id; when a friend opens it and starts the bot, the sharer gets
   // +10 coins (checked on the server in app-open, max 10 friends).
   const shareEpisode = async (episode) => {
     const tg = window.Telegram?.WebApp;
@@ -382,7 +382,7 @@ function App() {
   }, [episodes, episodesLoaded, isChannelMember]);
 
   const handlePlay = (episode) => {
-    if (isChannelMember === false) { setShowJoinPrompt(true); return; } // must follow the channel to listen
+    if (isChannelMember === false) { setShowJoinPrompt(true); return; } // must start the bot to listen
     setCurrentEpisode(episode);
     if (episode.audio === lastPlayedEpisode?.audio) audioRef.current?.play();
     else setLastPlayedEpisode(episode); // new src + autoPlay starts it
@@ -879,7 +879,7 @@ function App() {
           <ul className="coins-info-list">
             <li><span className="coins-info-icon">🎧</span><p>Listen to any episode. Every <b>2 minutes</b> of listening earns you <b>1 coin</b>.</p></li>
             <li><span className="coins-info-icon">⏯️</span><p>Only real listening counts. Paused, loading or skipped time doesn't.</p></li>
-            <li><span className="coins-info-icon">📤</span><p>Invite friends: share an episode (the <b>share button</b> in the player). When a friend opens it and <b>joins our channel</b>, you get <b>10 coins</b>. Up to <b>10 friends</b>.</p></li>
+            <li><span className="coins-info-icon">📤</span><p>Invite friends: share an episode (the <b>share button</b> in the player). When a friend opens it and <b>starts @Poddexbot</b>, you get <b>10 coins</b>. Up to <b>10 friends</b>.</p></li>
             <li><span className="coins-info-icon">🏆</span><p>The <b>top 10 listeners</b> appear on the leaderboard below. Keep listening to climb!</p></li>
           </ul>
           {!inTelegram && <p className="coins-info-note">Open Poddex from Telegram to start earning coins.</p>}
@@ -1060,9 +1060,9 @@ function App() {
         <div className="join-backdrop" onClick={() => setShowJoinPrompt(false)}>
           <div className="join-sheet" onClick={(e) => e.stopPropagation()}>
             <img src="/logo.png" alt="" className="join-logo" />
-            <h3 className="join-title">Follow Poddex to listen</h3>
-            <p className="join-text">Join our Telegram channel to listen to episodes. It's free, takes one tap, and you'll get new episodes first.</p>
-            <button className="join-btn" onClick={joinChannel}>Join channel</button>
+            <h3 className="join-title">Start Poddex bot to listen</h3>
+            <p className="join-text">Open @Poddexbot and press <b>Start</b> to listen to episodes. It's free and takes one tap.</p>
+            <button className="join-btn" onClick={joinChannel}>Open bot</button>
             <button className="join-later" onClick={() => setShowJoinPrompt(false)}>Later</button>
           </div>
         </div>

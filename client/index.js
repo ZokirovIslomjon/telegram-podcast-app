@@ -27,6 +27,22 @@ const INTRO_CAPTION = `🎧 Stop scrolling. Start listening.
 ❌No ads. No complicated setup. Just open the app and start listening.`;
 let introVideo = { source: path.join(__dirname, 'public', 'intro.MP4') }; // after the first send, Telegram's file_id is reused (no re-upload)
 bot.start(async (ctx) => {
+    // Remember that this user started the bot: the mini app only plays episodes for them (checked in app-open)
+    try {
+        const res = await fetch(`${process.env.SUPABASE_URL}/rest/v1/bot_users`, {
+            method: 'POST',
+            headers: {
+                apikey: process.env.SUPABASE_SERVICE_ROLE_KEY,
+                Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+                'Content-Type': 'application/json',
+                Prefer: 'resolution=ignore-duplicates'
+            },
+            body: JSON.stringify({ telegram_id: ctx.from.id })
+        });
+        if (!res.ok) throw new Error(`Supabase ${res.status}: ${await res.text()}`);
+    } catch (err) {
+        console.error('bot_users insert failed:', err);
+    }
     const msg = await ctx.replyWithVideo(introVideo, {
         caption: INTRO_CAPTION,
         reply_markup: {
@@ -58,7 +74,7 @@ bot.command('stats', async (ctx) => {
         ctx.reply('❌ Could not load stats.');
     }
 });
-bot.telegram.deleteWebhook().then(() => bot.launch({ dropPendingUpdates: true }));
+bot.telegram.deleteWebhook().then(() => bot.launch({ dropPendingUpdates: false }));
 
 // Start Server
 const PORT = process.env.PORT || 3000;
