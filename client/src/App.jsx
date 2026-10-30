@@ -340,8 +340,8 @@ function App() {
   };
 
   // SHARE: Telegram share window with a prepared message (cover + title + "Listen on Poddex" button).
-  // The link carries the sharer's id; when a friend opens it and starts the bot, the sharer gets
-  // +10 coins (checked on the server in app-open, max 10 friends).
+  // The link carries the sharer's id; each friend who opens it and starts the bot is saved
+  // (checked on the server in app-open). At 10 joined friends the sharer gets 100 coins once.
   const shareEpisode = async (episode) => {
     const tg = window.Telegram?.WebApp;
     const myId = tg?.initDataUnsafe?.user?.id;
@@ -879,7 +879,7 @@ function App() {
           <ul className="coins-info-list">
             <li><span className="coins-info-icon">🎧</span><p>Listen to any episode. Every <b>2 minutes</b> of listening earns you <b>1 coin</b>.</p></li>
             <li><span className="coins-info-icon">⏯️</span><p>Only real listening counts. Paused, loading or skipped time doesn't.</p></li>
-            <li><span className="coins-info-icon">📤</span><p>Invite friends: share an episode (the <b>share button</b> in the player). When a friend opens it and <b>starts @Poddexbot</b>, you get <b>10 coins</b>. Up to <b>10 friends</b>.</p></li>
+            <li><span className="coins-info-icon">📤</span><p>Invite friends: share an episode (the <b>share button</b> in the player). When <b>10 friends</b> open it and <b>start @Poddexbot</b>, you get <b>100 coins</b>. Every friend who joins is saved; the coins appear once your 10th friend joins.</p></li>
             <li><span className="coins-info-icon">🏆</span><p>The <b>top 10 listeners</b> appear on the leaderboard below. Keep listening to climb!</p></li>
           </ul>
           {!inTelegram && <p className="coins-info-note">Open Poddex from Telegram to start earning coins.</p>}
