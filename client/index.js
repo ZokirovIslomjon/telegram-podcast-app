@@ -2,6 +2,7 @@ const express = require('express');
 const path = require('path');
 const cors = require('cors');
 const { Telegraf } = require('telegraf');
+const { message } = require('telegraf/filters');
 require('dotenv').config();
 
 const app = express();
@@ -74,6 +75,35 @@ bot.command('stats', async (ctx) => {
         ctx.reply('❌ Could not load stats.');
     }
 });
+// PREMIUM (99 Stars, monthly subscription). The invoice is made by the Supabase `premium` function.
+// Telegram asks the bot to approve each payment (must answer within 10 seconds)...
+bot.on('pre_checkout_query', (ctx) => {
+    const q = ctx.preCheckoutQuery;
+    const ok = q.currency === 'XTR' && q.total_amount === 99 && q.invoice_payload === `premium_${q.from.id}`;
+    return ctx.answerPreCheckoutQuery(ok, ok ? undefined : 'Please try again from the Poddex app.');
+});
+// ...then sends the payment (also every monthly renewal): +30 days of Premium, once per charge
+bot.on(message('successful_payment'), async (ctx) => {
+    const p = ctx.message.successful_payment;
+    try {
+        const res = await fetch(`${process.env.SUPABASE_URL}/rest/v1/rpc/grant_premium_stars`, {
+            method: 'POST',
+            headers: {
+                apikey: process.env.SUPABASE_SERVICE_ROLE_KEY,
+                Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ p_telegram_id: ctx.from.id, p_charge_id: p.telegram_payment_charge_id, p_stars: p.total_amount })
+        });
+        if (!res.ok) throw new Error(`Supabase ${res.status}: ${await res.text()}`);
+        const until = new Date(await res.json()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+        ctx.reply(`⭐ Poddex Premium is active until ${until}. Lyrics are unlocked in the app.`);
+    } catch (err) {
+        console.error('Premium grant failed:', err, p.telegram_payment_charge_id);
+        ctx.reply('❌ Payment received, but Premium could not be activated. Please message the Poddex admin.');
+    }
+});
+
 bot.telegram.deleteWebhook().then(() => bot.launch({ dropPendingUpdates: false }));
 
 // Start Server

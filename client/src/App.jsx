@@ -197,6 +197,9 @@ function App() {
   const [isChannelMember, setIsChannelMember] = useState(null); // null = unknown (don't nag)
   const [showJoinPrompt, setShowJoinPrompt] = useState(false);
   const [lyrics, setLyrics] = useState(null); // null = not loaded yet, [{ time, text }] = ready
+  const [premiumUntil, setPremiumUntil] = useState(null); // Premium (lyrics) end date, null = no Premium
+  const [showPremium, setShowPremium] = useState(false);
+  const [premiumBusy, setPremiumBusy] = useState(false);
   const [episodesLoaded, setEpisodesLoaded] = useState(false);
   
   // NEW: PAGINATION STATE
@@ -256,6 +259,7 @@ function App() {
       .then(res => res.json())
       .then(data => {
         if (typeof data.coins === 'number') { setUserCoins(data.coins); setUserRank(data.rank); }
+        if ('premiumUntil' in data) setPremiumUntil(data.premiumUntil);
         if (typeof data.isMember !== 'boolean') return;
         setIsChannelMember(data.isMember);
         if (data.isMember) setShowJoinPrompt(false);
@@ -297,6 +301,58 @@ function App() {
   useEffect(() => {
     fetch('https://telegram-podcast-app.onrender.com/health', { mode: 'no-cors' }).catch(() => {});
   }, []);
+
+  // PREMIUM (lyrics): 99 Stars a month (Telegram subscription) or 100 coins for 30 days
+  const isPremium = Boolean(premiumUntil && new Date(premiumUntil) > new Date());
+  const callPremium = (method) =>
+    fetch(`${SUPABASE_URL}/functions/v1/premium`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ initData: window.Telegram?.WebApp?.initData, method })
+    }).then(res => res.json());
+
+  const buyPremiumWithStars = async () => {
+    const tg = window.Telegram?.WebApp;
+    setPremiumBusy(true);
+    try {
+      // The bot on Render must approve the payment within 10 seconds, so wake it up first
+      await fetch('https://telegram-podcast-app.onrender.com/health', { mode: 'no-cors' }).catch(() => {});
+      const data = await callPremium('stars');
+      if (!data.link) throw new Error(data.error);
+      tg.openInvoice(data.link, (status) => {
+        if (status !== 'paid') return;
+        setShowPremium(false);
+        // The bot activates Premium a moment after the payment: check again a few times
+        let tries = 0;
+        const timer = setInterval(() => { checkChannelMembership(); if (++tries >= 10) clearInterval(timer); }, 2000);
+      });
+    } catch (err) {
+      console.error('Stars payment failed:', err);
+      tg?.showAlert?.('Could not open the payment. Please try again.');
+    } finally {
+      setPremiumBusy(false);
+    }
+  };
+
+  const buyPremiumWithCoins = async () => {
+    const tg = window.Telegram?.WebApp;
+    setPremiumBusy(true);
+    try {
+      const data = await callPremium('coins');
+      if (!data.premiumUntil) {
+        tg?.showAlert?.(data.error === 'not enough coins' ? `You need 100 coins. You have ${userCoins}.` : 'Could not activate Premium. Please try again.');
+        return;
+      }
+      setPremiumUntil(data.premiumUntil);
+      setShowPremium(false);
+      checkChannelMembership(); // refresh coins and rank
+    } catch (err) {
+      console.error('Coins payment failed:', err);
+      tg?.showAlert?.('Could not activate Premium. Please try again.');
+    } finally {
+      setPremiumBusy(false);
+    }
+  };
 
   // FETCH EPISODES from Poddex DB (Supabase, always on): Changelog (hourly RSS job) + David's own mp3s (pc-tools/make_lrc.py).
   useEffect(() => {
@@ -554,28 +610,26 @@ function App() {
     setVisibleCount(prev => prev + 15);
   };
 
-  // LYRICS for the playing episode:
+  // LYRICS for the playing episode (Premium only, checked on the server by the `lyrics` function):
   //  - David's own episodes (have lyricsStatus): Whisper .lrc from the DB, exact time per line
-  //  - Changelog episodes: their transcript page via the `transcript` function, timed from [mm:ss] markers
+  //  - Changelog episodes: their transcript page, timed from [mm:ss] markers
   useEffect(() => {
     setLyrics(null);
     const ep = lastPlayedEpisode;
-    let request;
-    if (ep?.lyricsStatus === 'ready') {
-      request = fetch(`${SUPABASE_URL}/rest/v1/episodes?select=lyrics_lrc&guid=eq.${encodeURIComponent(ep.guid)}`, { headers: { apikey: SUPABASE_KEY } })
-        .then(res => res.json())
-        .then(rows => parseLrc(rows?.[0]?.lyrics_lrc || ''));
-    } else if (!ep?.lyricsStatus && ep?.transcript) {
-      request = fetch(`${SUPABASE_URL}/functions/v1/transcript?url=${encodeURIComponent(ep.transcript)}`)
-        .then(res => res.json())
-        .then(data => (Array.isArray(data.lines) ? data.lines : []));
-    } else return;
+    if (!isPremium) return;
+    if (!(ep?.lyricsStatus === 'ready' || (!ep?.lyricsStatus && ep?.transcript))) return;
     let cancelled = false;
-    request
+    fetch(`${SUPABASE_URL}/functions/v1/lyrics`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ initData: window.Telegram?.WebApp?.initData, episodeId: ep.id })
+    })
+      .then(res => res.json())
+      .then(data => (typeof data.lrc === 'string' ? parseLrc(data.lrc) : Array.isArray(data.lines) ? data.lines : []))
       .then(lines => { if (!cancelled) setLyrics(lines); })
       .catch(() => { if (!cancelled) setLyrics([]); });
     return () => { cancelled = true; };
-  }, [lastPlayedEpisode]);
+  }, [lastPlayedEpisode, isPremium]);
 
   // Start time of each line. .lrc lines have their own time. Changelog lines are exact where the
   // transcript has a [mm:ss] marker, and in between spread by text length up to the next marker (or the end).
@@ -681,9 +735,15 @@ function App() {
         {(currentEpisode.lyricsStatus || currentEpisode.transcript) && (
           <div className="lyrics-card">
             <div className="lyrics-title">Lyrics</div>
-            {currentEpisode.lyricsStatus === 'pending' && <p className="lyrics-empty">Lyrics coming soon</p>}
-            {(currentEpisode.lyricsStatus === 'failed' || lyrics?.length === 0) && <p className="lyrics-empty">Lyrics not available</p>}
-            {lyrics === null && (currentEpisode.lyricsStatus === 'ready' || (!currentEpisode.lyricsStatus && currentEpisode.transcript)) && <p className="lyrics-empty">Loading lyrics…</p>}
+            {!isPremium && (
+              <div className="lyrics-premium">
+                <p className="lyrics-empty">Lyrics are for <b>Premium</b> members. Get Premium to read along with every episode.</p>
+                <button className="premium-btn" onClick={() => setShowPremium(true)}>⭐ Get Premium</button>
+              </div>
+            )}
+            {isPremium && currentEpisode.lyricsStatus === 'pending' && <p className="lyrics-empty">Lyrics coming soon</p>}
+            {isPremium && (currentEpisode.lyricsStatus === 'failed' || lyrics?.length === 0) && <p className="lyrics-empty">Lyrics not available</p>}
+            {isPremium && lyrics === null && (currentEpisode.lyricsStatus === 'ready' || (!currentEpisode.lyricsStatus && currentEpisode.transcript)) && <p className="lyrics-empty">Loading lyrics…</p>}
             {lyrics?.length > 0 && (
               <div className="lyrics-box" ref={lyricsBoxRef}>
                 {lyrics.map((line, i) => (
@@ -874,12 +934,24 @@ function App() {
           </div>
         </div>
 
+        <div className="premium-card">
+          {isPremium ? (
+            <p><b>⭐ Premium</b> is active until <b>{new Date(premiumUntil).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</b>. Lyrics are unlocked.</p>
+          ) : (
+            <>
+              <p><b>⭐ Premium</b>: see lyrics for every episode. <b>99 Stars</b> a month, or <b>100 coins</b> for 30 days.</p>
+              {inTelegram && <button className="premium-btn" onClick={() => setShowPremium(true)}>Get Premium</button>}
+            </>
+          )}
+        </div>
+
         <div className="coins-info">
           <h3 className="coins-info-title">How coins work</h3>
           <ul className="coins-info-list">
             <li><span className="coins-info-icon">🎧</span><p>Listen to any episode. Every <b>2 minutes</b> of listening earns you <b>1 coin</b>.</p></li>
             <li><span className="coins-info-icon">⏯️</span><p>Only real listening counts. Paused, loading or skipped time doesn't.</p></li>
             <li><span className="coins-info-icon">📤</span><p>Invite friends: share an episode (the <b>share button</b> in the player). When <b>10 friends</b> open it and <b>start @Poddexbot</b>, you get <b>100 coins</b>. Every friend who joins is saved; the coins appear once your 10th friend joins.</p></li>
+            <li><span className="coins-info-icon">⭐</span><p>Spend <b>100 coins</b> on <b>30 days of Premium</b> (lyrics). Spent coins leave your score.</p></li>
             <li><span className="coins-info-icon">🏆</span><p>The <b>top 10 listeners</b> appear on the leaderboard below. Keep listening to climb!</p></li>
           </ul>
           {!inTelegram && <p className="coins-info-note">Open Poddex from Telegram to start earning coins.</p>}
@@ -1055,6 +1127,20 @@ function App() {
           onTimeUpdate={handleTimeUpdate}
           onLoadedMetadata={handleLoadedMetadata}
         />
+      )}
+      {showPremium && (
+        <div className="join-backdrop" onClick={() => !premiumBusy && setShowPremium(false)}>
+          <div className="join-sheet" onClick={(e) => e.stopPropagation()}>
+            <img src="/logo.png" alt="" className="join-logo" />
+            <h3 className="join-title">Poddex Premium</h3>
+            <p className="join-text">See the lyrics of every episode, following along as people talk. 30 days.</p>
+            <button className="join-btn" disabled={premiumBusy} onClick={buyPremiumWithStars}>{premiumBusy ? 'Please wait…' : 'Pay 99 ⭐ Stars'}</button>
+            <button className="premium-coins-btn" disabled={premiumBusy || userCoins < 100} onClick={buyPremiumWithCoins}>
+              Use 100 coins (you have {userCoins})
+            </button>
+            <button className="join-later" disabled={premiumBusy} onClick={() => setShowPremium(false)}>Not now</button>
+          </div>
+        </div>
       )}
       {showJoinPrompt && (
         <div className="join-backdrop" onClick={() => setShowJoinPrompt(false)}>

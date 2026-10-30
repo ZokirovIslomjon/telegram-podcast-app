@@ -433,6 +433,30 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent-warm
 }
 .join-btn:active { transform: scale(0.98); }
 .join-later { margin-top: var(--space-1); padding: 12px; color: var(--text-sub); font-weight: 700; font-size: 14px; }
+.join-btn:disabled, .join-later:disabled { opacity: 0.6; }
+
+/* PREMIUM (lyrics) */
+.premium-btn {
+  padding: 10px 18px; border-radius: 999px; background: var(--accent-gradient);
+  color: var(--on-accent); font-weight: 800; font-size: 14px;
+}
+.premium-btn:active { transform: scale(0.98); }
+.lyrics-premium { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-1); padding-bottom: var(--space-2); }
+.lyrics-premium .lyrics-empty { margin: 0; }
+.lyrics-premium b { color: var(--text); }
+.premium-card {
+  margin: 0 var(--space-2) var(--space-2); padding: var(--space-2);
+  border-radius: var(--radius-md); border: 1px solid var(--glass-border);
+  background: linear-gradient(135deg, rgba(255, 138, 76, 0.18) 0%, rgba(42, 12, 18, 0.6) 100%);
+  display: flex; flex-direction: column; align-items: flex-start; gap: 12px;
+}
+.premium-card p { margin: 0; font-size: 14px; line-height: 1.5; color: var(--text-sub); }
+.premium-card b { color: var(--text); }
+.premium-coins-btn {
+  width: 100%; max-width: 360px; margin-top: var(--space-1); padding: var(--space-2); border-radius: 999px;
+  border: 1px solid var(--glass-border); color: var(--text); font-weight: 800; font-size: 15px;
+}
+.premium-coins-btn:disabled { opacity: 0.45; }
 @keyframes join-fade { from { opacity: 0; } }
 @keyframes join-up { from { transform: translateY(100%); } }
 
