@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
 import './App.css'
 import Admin from './Admin'
+import Chat, { ChatPreview } from './Chat'
 
 // SVG Icons Components
 const Icons = {
@@ -211,6 +212,7 @@ function App() {
   const [premiumBusy, setPremiumBusy] = useState(false);
   const [coinsInfoOpen, setCoinsInfoOpen] = useState(false); // Profile: "How coins work" Read more
   const [showAdmin, setShowAdmin] = useState(false);
+  const [showChat, setShowChat] = useState(false); // full-screen community chat
   const [episodesLoaded, setEpisodesLoaded] = useState(false);
   
   // NEW: PAGINATION STATE
@@ -548,11 +550,6 @@ function App() {
     setLastPlayedEpisode(null);
   };
 
-  const handleCategoryClick = (category) => {
-    setSelectedCategory(category.name);
-    setActiveTab('discover');
-  };
-
   const handleBannerPlayNow = () => {
     if (lastPlayedEpisode) {
       handlePlay(lastPlayedEpisode);
@@ -771,6 +768,11 @@ function App() {
         )}
       </div>
     )
+  }
+
+  // COMMUNITY CHAT (full screen, opened from the home page card)
+  if (showChat) {
+    return <Chat onClose={() => setShowChat(false)} myId={telegramUser?.id} onNeedBot={() => setShowJoinPrompt(true)} />;
   }
 
   // DISCOVER TAB
@@ -1061,21 +1063,7 @@ function App() {
         </div>
       </div>
 
-      <div className="section-title">
-        <span>Category</span><span className="see-all" onClick={() => setActiveTab('discover')}>See All</span>
-      </div>
-      <div className="categories-row">
-        {CATEGORIES.slice(0, 5).map(cat => (
-          <div key={cat.name} className="cat-item" onClick={() => handleCategoryClick(cat)}>
-            <div className="cat-icon" style={{background: selectedCategory === cat.name ? 'var(--primary)' : 'var(--white)', color: selectedCategory === cat.name ? 'white' : 'inherit'}}>
-              {cat.icon}
-            </div>
-            <span className="cat-name" style={{color: selectedCategory === cat.name ? 'var(--primary)' : 'var(--text-grey)', fontWeight: selectedCategory === cat.name ? '600' : '400'}}>
-              {cat.name}
-            </span>
-          </div>
-        ))}
-      </div>
+      <ChatPreview onOpen={() => setShowChat(true)} />
 
       <div className="section-title">
         <span>Latest Episodes</span>

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import './Admin.css'
+import { ChatReports } from './Chat'
 
 // ADMIN DASHBOARD – only opened by the admin (button on Profile). The `admin` function checks
 // the Telegram signature and the admin id on the server, so nobody else can load these numbers.
@@ -125,6 +126,8 @@ export default function Admin({ onClose }) {
               <DayBars title="Stars per day" points={data.starsByDay} valueKey="stars" unit="Stars" emptyText={`No Stars in the last ${rangeLabel}.`} />
             </>
           )}
+
+          <ChatReports />
 
           <div className="admin-card">
             <div className="admin-card-head"><h3>Recent payments</h3></div>
