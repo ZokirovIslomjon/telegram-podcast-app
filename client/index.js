@@ -75,6 +75,28 @@ bot.command('stats', async (ctx) => {
         ctx.reply('❌ Could not load stats.');
     }
 });
+// Admin dashboard "Bot followers": remember when a user blocks (kicked) or unblocks/starts (member) the bot
+bot.on('my_chat_member', async (ctx) => {
+    if (ctx.chat?.type !== 'private') return;
+    const status = ctx.myChatMember.new_chat_member.status;
+    if (status !== 'kicked' && status !== 'member') return;
+    try {
+        const res = await fetch(`${process.env.SUPABASE_URL}/rest/v1/bot_users`, {
+            method: 'POST',
+            headers: {
+                apikey: process.env.SUPABASE_SERVICE_ROLE_KEY,
+                Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+                'Content-Type': 'application/json',
+                Prefer: 'resolution=merge-duplicates'
+            },
+            body: JSON.stringify({ telegram_id: ctx.from.id, blocked: status === 'kicked' })
+        });
+        if (!res.ok) throw new Error(`Supabase ${res.status}: ${await res.text()}`);
+    } catch (err) {
+        console.error('bot_users block update failed:', err);
+    }
+});
+
 // PREMIUM (99 Stars, monthly subscription). The invoice is made by the Supabase `premium` function.
 // Telegram asks the bot to approve each payment (must answer within 10 seconds)...
 bot.on('pre_checkout_query', (ctx) => {

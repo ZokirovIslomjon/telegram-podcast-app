@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
 import './App.css'
+import Admin from './Admin'
 
 // SVG Icons Components
 const Icons = {
@@ -130,6 +131,7 @@ const BOT_URL = 'https://t.me/Poddexbot';
 // PREMIUM is paused: lyrics are free for everyone and every Premium message/button/banner is hidden.
 // Set to true (and PREMIUM_ENABLED in the Supabase `premium` + `lyrics` functions) to sell Premium again.
 const PREMIUM_ENABLED = false;
+const ADMIN_ID = 848849648; // only this Telegram account sees the Admin button (the `admin` function checks it again on the server)
 const COVER_IMAGE = '/poddex%20cover.jpg'; // same cover for every episode (client/public/poddex cover.jpg)
 
 // "[mm:ss.xx] text" lines -> [{ time, text }]
@@ -208,6 +210,7 @@ function App() {
   const [showPremium, setShowPremium] = useState(false);
   const [premiumBusy, setPremiumBusy] = useState(false);
   const [coinsInfoOpen, setCoinsInfoOpen] = useState(false); // Profile: "How coins work" Read more
+  const [showAdmin, setShowAdmin] = useState(false);
   const [episodesLoaded, setEpisodesLoaded] = useState(false);
   
   // NEW: PAGINATION STATE
@@ -912,6 +915,7 @@ function App() {
   // PROFILE TAB
   if (activeTab === 'profile') {
     const inTelegram = Boolean(window.Telegram?.WebApp?.initData);
+    if (showAdmin) return <Admin onClose={() => setShowAdmin(false)} />;
     return (
       <div className="app-container">
         <div className="profile-header">
@@ -925,6 +929,8 @@ function App() {
             <p className="profile-username-center">{telegramUser?.username ? `@${telegramUser.username}` : 'Telegram User'}</p>
           </div>
         </div>
+
+        {telegramUser?.id === ADMIN_ID && <button className="profile-admin-btn" onClick={() => setShowAdmin(true)}>📊 Admin dashboard</button>}
 
         <div className="profile-stats-3col">
           <div className="stat-card">
