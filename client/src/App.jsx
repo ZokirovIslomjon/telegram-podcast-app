@@ -127,6 +127,9 @@ const Icons = {
 const SUPABASE_URL = 'https://uqphmtuqncddzsvjaxqu.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_PxlMl3gWmL_kT2kap6MOZw_Vq7FNuci';
 const BOT_URL = 'https://t.me/Poddexbot';
+// PREMIUM is paused: lyrics are free for everyone and every Premium message/button/banner is hidden.
+// Set to true (and PREMIUM_ENABLED in the Supabase `premium` + `lyrics` functions) to sell Premium again.
+const PREMIUM_ENABLED = false;
 const COVER_IMAGE = '/poddex%20cover.jpg'; // same cover for every episode (client/public/poddex cover.jpg)
 
 // "[mm:ss.xx] text" lines -> [{ time, text }]
@@ -150,7 +153,7 @@ const CATEGORIES = [
 ];
 
 // Banners
-const BANNERS = [
+const ALL_BANNERS = [
   {
     title: "Want to See Lyrics?",
     subtitle: "Unlock Premium!",
@@ -168,6 +171,8 @@ const BANNERS = [
     gradient: "linear-gradient(135deg, rgba(255, 107, 157, 0.9) 0%, rgba(196, 69, 105, 0.9) 100%)"
   }
 ];
+
+const BANNERS = PREMIUM_ENABLED ? ALL_BANNERS : ALL_BANNERS.filter(b => !b.premium);
 
 // Leaderboard photo: Telegram profile photo, or the first letter of the name if there is none / it fails to load
 function LeaderboardAvatar({ name, photoUrl }) {
@@ -306,7 +311,7 @@ function App() {
   }, []);
 
   // PREMIUM (lyrics): 99 Stars a month (Telegram subscription) or 100 coins for 30 days
-  const isPremium = Boolean(premiumUntil && new Date(premiumUntil) > new Date());
+  const isPremium = !PREMIUM_ENABLED || Boolean(premiumUntil && new Date(premiumUntil) > new Date()); // paused = everyone gets lyrics
   const callPremium = (method) =>
     fetch(`${SUPABASE_URL}/functions/v1/premium`, {
       method: 'POST',
@@ -939,7 +944,7 @@ function App() {
           </div>
         </div>
 
-        <div className="premium-card">
+        {PREMIUM_ENABLED && <div className="premium-card">
           {isPremium ? (
             <p><b>⭐ Premium</b> is active until <b>{new Date(premiumUntil).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</b>. Lyrics are unlocked.</p>
           ) : (
@@ -948,7 +953,7 @@ function App() {
               {inTelegram && <button className="premium-btn" onClick={() => setShowPremium(true)}>Get Premium</button>}
             </>
           )}
-        </div>
+        </div>}
 
         <div className="coins-info">
           <h3 className="coins-info-title">How coins work</h3>
@@ -957,7 +962,7 @@ function App() {
             <li><span className="coins-info-icon">⏯️</span><p>Only real listening counts. Paused, loading or skipped time doesn't.</p></li>
             {coinsInfoOpen && <>
             <li><span className="coins-info-icon">📤</span><p>Invite friends: share an episode (the <b>share button</b> in the player). When <b>10 friends</b> open it and <b>start @Poddexbot</b>, you get <b>100 coins</b>. Every friend who joins is saved; the coins appear once your 10th friend joins.</p></li>
-            <li><span className="coins-info-icon">⭐</span><p>Spend <b>100 coins</b> on <b>30 days of Premium</b> (lyrics). Spent coins leave your score.</p></li>
+            {PREMIUM_ENABLED && <li><span className="coins-info-icon">⭐</span><p>Spend <b>100 coins</b> on <b>30 days of Premium</b> (lyrics). Spent coins leave your score.</p></li>}
             <li><span className="coins-info-icon">🏆</span><p>The <b>top 10 listeners</b> appear on the leaderboard below. Keep listening to climb!</p></li>
             </>}
           </ul>
